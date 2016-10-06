@@ -13,7 +13,7 @@ ops.fs                  = 20000;        % sampling rate
 ops.NchanTOT            = 128;           % total number of channels		
 ops.Nchan               = 128;           % number of active channels 		
 ops.Nfilt               = 512;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     		
-ops.nt0                 = 36; % samples per spike/template
+ops.nt0                 = 32; % samples per spike/template
 ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)		
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)		
 		
