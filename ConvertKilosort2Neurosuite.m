@@ -36,10 +36,13 @@ ycoords      = rez.yc;
 % xcoords      = ones(Nchan, 1);
 % ycoords      = (1:Nchan)';
 
-par = LoadPar(fullfile(basepath,[basename '.xml']));
-totalch = par.nChannels;
-sbefore = 16;%samples before/after for spike extraction
-safter = 24;%... could read from SpkGroups in xml
+xml = LoadXml(fullfile(basepath,[basename '.xml']));
+totalch = xml.nChannels;
+
+safter =xml.SpkGrps(1).nSamples - xml.SpkGrps(1).PeakSample;%... could read from SpkGroups in xml
+%safter = 16;
+%sbefore = 16;
+sbefore = xml.SpkGrps(1).nSamples - safter;%samples before/after for spike extraction
 if exist(rez.ops.fbinary,'file')
     datpath = rez.ops.fbinary;
 else
@@ -79,9 +82,9 @@ for groupidx = 1:length(allgroups)
 %     cluster_names = unique(tclu);
     gidx = find(rez.ops.kcoords == tgroup);%find all channels in this group
     channellist = [];
-    for ch = 1:length(par.SpkGrps)
-        if ismember(gidx(1),par.SpkGrps(ch).Channels+1)
-            channellist = par.SpkGrps(ch).Channels+1;
+    for ch = 1:length(xml.SpkGrps)
+        if ismember(gidx(1),xml.SpkGrps(ch).Channels+1)
+            channellist = xml.SpkGrps(ch).Channels+1;
             break
         end
     end
@@ -146,15 +149,17 @@ for groupidx = 1:length(allgroups)
     
     
     featuresperspike = 3;%kilosort default
-
-    fets = pcFeatures(tidx,:,1:(max([ngroupchans size(pcFeatures,3)])));
+    
+    % initialize fet file
+    fets = zeros(sum(tidx),size(pcFeatures,2),ngroupchans);
+    pct = pcFeatures(tidx,:,:);
     %for each cluster/template id, grab at once all spikes in that group
     %and rearrange their features to match the shank order
     allshankclu = unique(tclu);
     for tc = 1:length(allshankclu)
         tsc = allshankclu(tc);
         i = find(tclu==tsc);
-        tforig = fets(i,:,:);%the subset of spikes with this clu ide
+        tforig = pct(i,:,:);%the subset of spikes with this clu ide
         tfnew = tforig; %will overwrite
         
         ii = tdx(tc,:);%handling nan cases where the template channel used was not in the shank
@@ -165,13 +170,13 @@ for groupidx = 1:length(allgroups)
         tfnew(:,:,gixs) = tforig(:,:,g);%replace ok elements
         tfnew(:,:,bixs) = 0;%zero out channels that are not on this shank
         
-        fets(i,:,:) = tfnew;
+        fets(i,:,:) = tfnew(:,:,1:length(xml.SpkGrps(groupidx).Channels));
     end
     %extract for relevant spikes only...
     % and heurstically on d3 only take fets for one channel for each original channel in shank... even though kilosort pulls 12 channels of fet data regardless
-    tfet1 = squeeze(fets(:,1,:));%lazy reshaping
-    tfet2 = squeeze(fets(:,2,:));
-    tfet3 = squeeze(fets(:,3,:));
+    tfet1 = squeeze(fets(:,1,1:length(xml.SpkGrps(groupidx).Channels)));%lazy reshaping
+    tfet2 = squeeze(fets(:,2,1:length(xml.SpkGrps(groupidx).Channels)));
+    tfet3 = squeeze(fets(:,3,1:length(xml.SpkGrps(groupidx).Channels)));
     fets = cat(2,tfet1,tfet2,tfet3)';%     fets = h5read(tkwx,['/channel_groups/' num2str(shank) '/features_masks']);
 %     fets = double(squeeze(fets(1,:,:)));
     %mean activity per spike
@@ -183,7 +188,9 @@ for groupidx = 1:length(allgroups)
 % 
 %     nfets = size(fets,1)+1;
 %     fets = cat(1,fets,fetmeans,firstpcmeans,wvpowers,wvranges,double(tspktimes'));
-    fets = cat(1,fets,wvpowers,wvranges,double(tspktimes'));
+    fets = cat(1,double(fets),wvpowers,wvranges,double(tspktimes'));
+  
+  %  fets = cat(1,double(fets),double(tspktimes'));
     fets = fets';
     % fets = cat(1,nfets,fets);
 
@@ -192,6 +199,8 @@ for groupidx = 1:length(allgroups)
     resname = fullfile(basepath,[basename '.res.' num2str(tgroup)]);
     fetname = fullfile(basepath,[basename '.fet.' num2str(tgroup)]);
     spkname = fullfile(basepath,[basename '.spk.' num2str(tgroup)]);
+  %fet
+    SaveFetIn(fetname,fets);
 
     %clu
     % if ~exist(cluname,'file')
@@ -211,7 +220,7 @@ for groupidx = 1:length(allgroups)
     clear fid
 
     %fet
-    SaveFetIn(fetname,fets);
+  %  SaveFetIn(fetname,fets);
 
     %spk
     fid=fopen(spkname,'w'); 
@@ -242,13 +251,18 @@ outputfile = fopen(FileName,'w');
 fprintf(outputfile, '%d\n', nFeatures);
 
 if isinf(BufSize)
-    fprintf(outputfile,formatstring,round(Fet'));
+  
+  temp = [round(100* Fet(:,1:end-1)) round(Fet(:,end))];
+    fprintf(outputfile,formatstring,temp');
 else
     nBuf = floor(size(Fet,1)/BufSize)+1;
     
     for i=1:nBuf 
         BufInd = [(i-1)*nBuf+1:min(i*nBuf,size(Fet,1))];
-        fprintf(outputfile,formatstring,round(Fet(BufInd,:)'));
+        temp = [round(100* Fet(BufInd,1:end-1)) round(Fet(BufInd,end))];
+        fprintf(outputfile,formatstring,temp');
     end
 end
+
+fclose(outputfile);
 
