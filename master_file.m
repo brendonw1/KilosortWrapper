@@ -8,7 +8,6 @@ end
 
 
 XMLfile = [basepath '/' basename '.xml'];
-
     [xml, rxml] = LoadXml(XMLfile);
    
 % default options are in parenthesis after the comment

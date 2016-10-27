@@ -13,8 +13,10 @@ ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openE
 if isdir('/home/sam/kilosort/')
     ops.fproc = ['/home/sam/kilosort/temp_wh.dat'];% residual from RAM of preprocessed data
 else
-    [a,b] = uigetfile;
-    ops.fproc = [b a];
+    ops.fproc = fullfile(rootpath,'temp_wh.dat');
+%     [a,b] = uigetfile;
+%     ops.fproc = [b a];
+    
 end
 ops.root                = rootpath; % 'openEphys' only: where raw files are
 
