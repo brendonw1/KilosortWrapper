@@ -1,6 +1,6 @@
 function master_file(basepath,basename)
-addpath(genpath('/home/brendon/gitrepositories/KiloSort')) % path to kilosort folder
-addpath(genpath('/home/brendon/gitrepositories/npy-matlab')) % path to npy-matlab scripts
+%addpath(genpath('/home/brendon/gitrepositories/KiloSort')) % path to kilosort folder
+%addpath(genpath('/home/brendon/gitrepositories/npy-matlab')) % path to npy-matlab scripts
 
 %% BW STUFF
 if ~exist('basepath','var')
@@ -8,7 +8,7 @@ if ~exist('basepath','var')
    basepath = cd; 
 end
 if ~exist(fullfile(basepath,'chanMap.mat'))
-    createChannelMapFile(basepath)
+    createChannelMapFile_Local(basepath)
 end
 
 %% default options are in parenthesis after the comment
@@ -25,6 +25,7 @@ if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end
 %%
+
 disp('PreprocessingData')
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
 
@@ -45,6 +46,7 @@ save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 % disp('Starting to convert to Phy format')
 % rezToPhy(rez, ops.root);
 disp('Starting to convert to Klusters format')
+keyboard
 ConvertKilosort2Neurosuite(basepath,basename,rez)
 
 %% remove temporary file
