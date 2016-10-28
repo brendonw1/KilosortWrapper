@@ -27,12 +27,15 @@ end
 %%
 disp('PreprocessingData')
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
+save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 
 disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
+save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 
 disp('Extracting final spike times')
 rez = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
+save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 
 % posthoc merge templates (under construction)
 %     rez = merge_posthoc2(rez);

@@ -15,8 +15,6 @@ if ~isempty(ops.chanMap)
             chanMapConn = chanMap(connected>1e-6);
             xc = xcoords(connected>1e-6);
             yc = ycoords(connected>1e-6);
-            vv = load(ops.chanMap);
-            kcoords = vv.kcoords;
         catch
             chanMapConn = 1+chanNums(connected>1e-6);
             xc = zeros(numel(chanMapConn), 1);
