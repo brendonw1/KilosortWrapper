@@ -131,6 +131,7 @@ for groupidx = 1:length(allgroups)
     end
     clear dat
     wvranges = wvranges';
+    
     %% Spike features
 %     for each template, rearrange the channels to reflect the shank order
     tdx = [];
