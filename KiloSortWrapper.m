@@ -18,7 +18,7 @@ function KiloSortWrapper(basepath,basename)
 %
 %    Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 
-% Copyright (C) 2016 Brendon Watson, Adrien Peyrache
+% Copyright (C) 2016 Brendon Watson
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
