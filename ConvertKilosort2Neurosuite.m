@@ -36,21 +36,11 @@ ycoords      = rez.yc;
 % xcoords      = ones(Nchan, 1);
 % ycoords      = (1:Nchan)';
 
-<<<<<<< HEAD
-xml = LoadXml(fullfile(basepath,[basename '.xml']));
-totalch = xml.nChannels;
-
-safter =xml.SpkGrps(1).nSamples - xml.SpkGrps(1).PeakSample;%... could read from SpkGroups in xml
-%safter = 16;
-%sbefore = 16;
-sbefore = xml.SpkGrps(1).nSamples - safter;%samples before/after for spike extraction
-=======
 par = LoadXml(fullfile(basepath,[basename '.xml']));
 
 totalch = par.nChannels;
 sbefore = 16;%samples before/after for spike extraction
 safter = 24;%... could read from SpkGroups in xml
->>>>>>> NewNames
 if exist(rez.ops.fbinary,'file')
     datpath = rez.ops.fbinary;
 else
@@ -198,13 +188,7 @@ for groupidx = 1:length(allgroups)
 % 
 %     nfets = size(fets,1)+1;
 %     fets = cat(1,fets,fetmeans,firstpcmeans,wvpowers,wvranges,double(tspktimes'));
-<<<<<<< HEAD
-    fets = cat(1,double(fets),wvpowers,wvranges,double(tspktimes'));
-  
-  %  fets = cat(1,double(fets),double(tspktimes'));
-=======
     fets = cat(1,double(fets),double(wvpowers),double(wvranges),double(tspktimes'));
->>>>>>> NewNames
     fets = fets';
     % fets = cat(1,nfets,fets);
 
