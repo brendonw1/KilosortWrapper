@@ -36,6 +36,7 @@ ycoords      = rez.yc;
 % xcoords      = ones(Nchan, 1);
 % ycoords      = (1:Nchan)';
 
+<<<<<<< HEAD
 xml = LoadXml(fullfile(basepath,[basename '.xml']));
 totalch = xml.nChannels;
 
@@ -43,6 +44,13 @@ safter =xml.SpkGrps(1).nSamples - xml.SpkGrps(1).PeakSample;%... could read from
 %safter = 16;
 %sbefore = 16;
 sbefore = xml.SpkGrps(1).nSamples - safter;%samples before/after for spike extraction
+=======
+par = LoadXml(fullfile(basepath,[basename '.xml']));
+
+totalch = par.nChannels;
+sbefore = 16;%samples before/after for spike extraction
+safter = 24;%... could read from SpkGroups in xml
+>>>>>>> NewNames
 if exist(rez.ops.fbinary,'file')
     datpath = rez.ops.fbinary;
 else
@@ -100,6 +108,7 @@ for groupidx = 1:length(allgroups)
     wvforms_all=zeros(length(tspktimes)*tsampsperwave*ngroupchans,1,'int16');
     wvranges = zeros(length(tspktimes),ngroupchans);
     wvpowers = zeros(1,length(tspktimes));
+    
     for j=1:length(tspktimes)
         try
             w = dat.data((double(tspktimes(j))-sbefore).*totalch+1:(double(tspktimes(j))+safter).*totalch);
@@ -111,6 +120,7 @@ for groupidx = 1:length(allgroups)
             % median subtract
             wvforms = wvforms - repmat(median(wvforms')',1,sbefore+safter);
             wvforms = wvforms(:);
+            
         catch
             disp(['Error extracting spike at sample ' int2str(double(tspktimes(j))) '. Saving as zeros']);
             disp(['Time range of that spike was: ' num2str(double(tspktimes(j))-sbefore) ' to ' num2str(double(tspktimes(j))+safter) ' samples'])
@@ -131,7 +141,7 @@ for groupidx = 1:length(allgroups)
     end
     clear dat
     wvranges = wvranges';
-
+    
     %% Spike features
 %     for each template, rearrange the channels to reflect the shank order
     tdx = [];
@@ -188,9 +198,13 @@ for groupidx = 1:length(allgroups)
 % 
 %     nfets = size(fets,1)+1;
 %     fets = cat(1,fets,fetmeans,firstpcmeans,wvpowers,wvranges,double(tspktimes'));
+<<<<<<< HEAD
     fets = cat(1,double(fets),wvpowers,wvranges,double(tspktimes'));
   
   %  fets = cat(1,double(fets),double(tspktimes'));
+=======
+    fets = cat(1,double(fets),double(wvpowers),double(wvranges),double(tspktimes'));
+>>>>>>> NewNames
     fets = fets';
     % fets = cat(1,nfets,fets);
 
