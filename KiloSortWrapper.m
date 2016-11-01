@@ -40,9 +40,14 @@ if ~exist(fullfile(basepath,'chanMap.mat'))
     createChannelMapFile_Local(basepath)
 end
 
+
 %% default options are in parenthesis after the comment
-pathToYourConfigFile = basepath; % you can change this line to another folder
-run(fullfile(pathToYourConfigFile, 'StandardConfig.m'))
+XMLFilePath = fullfile(basepath, [basename '.xml']);
+
+if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
+    addpath(basepath);
+end
+ops = StandardConfig(XMLFilePath);
 
 tic; % start timer
 %%
