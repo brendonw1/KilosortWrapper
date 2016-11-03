@@ -1,8 +1,12 @@
 function ops = StandardConfig(XMLfile)
 
-sl  =regexp(XMLfile,'/');
-[xml, rxml] = LoadXml(XMLfile);
-rootpath  =XMLfile(1:sl(end)-1);
+% Loads xml parameters (Neuroscope)
+xml = LoadXml(XMLfile);
+
+% Define rootpath
+sl          = regexp(XMLfile,'/');
+rootpath    = XMLfile(1:sl(end)-1);
+
 ops.GPU                 = 1; % whether to run this code on an Nvidia GPU (much faster, mexGPUall first)
 ops.parfor              = 0; % whether to use parfor to accelerate some parts of the algorithm
 ops.verbose             = 1; % whether to print command line progress
@@ -10,6 +14,8 @@ ops.showfigures         = 0; % whether to plot figures during optimization
 
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openEphys'
+
+%Should get rid of this...
 if isdir('/home/sam/kilosort/')
     ops.fproc = ['/home/sam/kilosort/temp_wh.dat'];% residual from RAM of preprocessed data
 else
@@ -24,7 +30,7 @@ ops.fs                  = xml.SampleRate;        % sampling rate
 ops.NchanTOT            = xml.nChannels;           % total number of channels
 ops.Nchan               = xml.nChannels;           % number of active channels
 
-Nfilt               = xml.nChannels*4 - mod(xml.nChannels*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
+Nfilt                   = xml.nChannels*4 - mod(xml.nChannels*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
 if Nfilt == 0
     ops.Nfilt = 64;
 else
