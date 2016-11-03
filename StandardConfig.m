@@ -4,8 +4,7 @@ function ops = StandardConfig(XMLfile)
 xml = LoadXml(XMLfile);
 
 % Define rootpath
-sl          = regexp(XMLfile,'/');
-rootpath    = XMLfile(1:sl(end)-1);
+rootpath          = fileparts(XMLfile);
 
 ops.GPU                 = 1; % whether to run this code on an Nvidia GPU (much faster, mexGPUall first)
 ops.parfor              = 0; % whether to use parfor to accelerate some parts of the algorithm
