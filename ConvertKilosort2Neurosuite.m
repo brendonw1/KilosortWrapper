@@ -1,22 +1,17 @@
 function ConvertKilosort2Neurosuite(basepath,basename,rez)
-% Converts .kwik/kwx files from Klusta into klusters-compatible
+
+% Converts KiloSort templates Klusta into klusters-compatible
 % fet,res,clu,spk files.  Works on a single shank of a recording, assumes a
 % 16bit .dat and an .xml file is present in "basepath" (home folder) and 
-% that they are named basename.dat and basename.xml.  Also assumes that
-% subdirectories in that basepath are made for each shank with names
-% specified by numbers (ie 1,2,3,4..8).  In each shank folder should be
-% .kwik and .kwx files made by klusta with names as follows:
-% basename_sh[shankumber].kwik/kwx.  This 
+% that they are named basename.dat and basename.xml.  
 % 
 % Inputs:
-% shank - the shank number (as a number, not text) equalling the name of
-% the folder under basepath with the data of interst.  Default = 1.
-% basepath - directory path to the main recording folder with .dat and .xml
-% as well as shank folders made by makeProbeMapKlusta2.m (default is
-% current directory matlab is pointed to)
-% basename - shared file name of .dat and .xml (default is last part of
-% current directory path, ie most immediate folder name)
-%
+%   basepath -  directory path to the main recording folder with .dat and .xml
+%               as well as shank folders made by makeProbeMapKlusta2.m (default is
+%               current directory matlab is pointed to)
+%   basename -  shared file name of .dat and .xml (default is last part of
+%               current directory path, ie most immediate folder name)
+
 % Brendon Watson 2016
 
 if ~exist('basepath','var')
@@ -37,7 +32,7 @@ ycoords      = rez.yc;
 % ycoords      = (1:Nchan)';
 
 par = LoadXml(fullfile(basepath,[basename '.xml']));
-
+keyboard
 totalch = par.nChannels;
 sbefore = 16;%samples before/after for spike extraction
 safter = 24;%... could read from SpkGroups in xml
@@ -80,9 +75,9 @@ for groupidx = 1:length(allgroups)
 %     cluster_names = unique(tclu);
     gidx = find(rez.ops.kcoords == tgroup);%find all channels in this group
     channellist = [];
-    for ch = 1:length(xml.SpkGrps)
-        if ismember(gidx(1),xml.SpkGrps(ch).Channels+1)
-            channellist = xml.SpkGrps(ch).Channels+1;
+    for ch = 1:length(par.SpkGrps)
+        if ismember(gidx(1),par.SpkGrps(ch).Channels+1)
+            channellist = par.SpkGrps(ch).Channels+1;
             break
         end
     end
@@ -170,13 +165,13 @@ for groupidx = 1:length(allgroups)
         tfnew(:,:,gixs) = tforig(:,:,g);%replace ok elements
         tfnew(:,:,bixs) = 0;%zero out channels that are not on this shank
         
-        fets(i,:,:) = tfnew(:,:,1:length(xml.SpkGrps(groupidx).Channels));
+        fets(i,:,:) = tfnew(:,:,1:length(par.SpkGrps(groupidx).Channels));
     end
     %extract for relevant spikes only...
     % and heurstically on d3 only take fets for one channel for each original channel in shank... even though kilosort pulls 12 channels of fet data regardless
-    tfet1 = squeeze(fets(:,1,1:length(xml.SpkGrps(groupidx).Channels)));%lazy reshaping
-    tfet2 = squeeze(fets(:,2,1:length(xml.SpkGrps(groupidx).Channels)));
-    tfet3 = squeeze(fets(:,3,1:length(xml.SpkGrps(groupidx).Channels)));
+    tfet1 = squeeze(fets(:,1,1:length(par.SpkGrps(groupidx).Channels)));%lazy reshaping
+    tfet2 = squeeze(fets(:,2,1:length(par.SpkGrps(groupidx).Channels)));
+    tfet3 = squeeze(fets(:,3,1:length(par.SpkGrps(groupidx).Channels)));
     fets = cat(2,tfet1,tfet2,tfet3)';%     fets = h5read(tkwx,['/channel_groups/' num2str(shank) '/features_masks']);
 %     fets = double(squeeze(fets(1,:,:)));
     %mean activity per spike
