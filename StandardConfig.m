@@ -14,15 +14,7 @@ ops.showfigures         = 0; % whether to plot figures during optimization
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openEphys'
 
-%Should get rid of this...
-if isdir('/home/sam/kilosort/')
-    ops.fproc = ['/home/sam/kilosort/temp_wh.dat'];% residual from RAM of preprocessed data
-else
-    ops.fproc = fullfile(rootpath,'temp_wh.dat');
-%     [a,b] = uigetfile;
-%     ops.fproc = [b a];
-    
-end
+ops.fproc = fullfile(rootpath,'temp_wh.dat');
 ops.root                = rootpath; % 'openEphys' only: where raw files are
 
 ops.fs                  = xml.SampleRate;        % sampling rate
