@@ -159,7 +159,11 @@ for groupidx = 1:length(allgroups)
     for tc = 1:length(allshankclu)
         tsc = allshankclu(tc);
         i = find(tclu==tsc);
+<<<<<<< Updated upstream
         tforig = pct(i,:,:);%the subset of spikes with this clu ide
+=======
+        tforig = fets(i,:,:);%the subset of spikes with this clu idx
+>>>>>>> Stashed changes
         tfnew = tforig; %will overwrite
         
         ii = tdx(tc,:);%handling nan cases where the template channel used was not in the shank
@@ -188,7 +192,14 @@ for groupidx = 1:length(allgroups)
 % 
 %     nfets = size(fets,1)+1;
 %     fets = cat(1,fets,fetmeans,firstpcmeans,wvpowers,wvranges,double(tspktimes'));
+<<<<<<< Updated upstream
     fets = cat(1,double(fets),double(wvpowers),double(wvranges),double(tspktimes'));
+=======
+    fets = double(fets);
+    fets = cat(1,fets,wvpowers,wvranges);
+    fets = 100*fets;
+    fets = cat(1,fets,double(tspktimes'));
+>>>>>>> Stashed changes
     fets = fets';
     % fets = cat(1,nfets,fets);
 
