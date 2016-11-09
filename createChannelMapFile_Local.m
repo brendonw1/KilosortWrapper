@@ -9,20 +9,14 @@ par = LoadXml(fullfile(basepath,d(1).name));
 
 % add bad channel-handling
 
-Nchannels = par.nChannels;
-
-connected = true(Nchannels, 1);
-chanMap   = 1:Nchannels;
-chanMap0ind = chanMap - 1;
-
 % xcoords   = ones(Nchannels,1);
 % ycoords   = [1:Nchannels]';
 xcoords = [];
 ycoords = [];
-for a= 1:length(par.AnatGrps)%being super lazy and making this map with loops
+for a= 1:length(par.SpkGrps)%being super lazy and making this map with loops
     x = [];
     y = [];
-    tchannels  = par.AnatGrps(a).Channels;
+    tchannels  = par.SpkGrps(a).Channels;
     for i =1:length(tchannels)
 %         if ~ismember(tchannels(i),badchannels)
             x(i) = length(tchannels)-i;
@@ -37,10 +31,16 @@ for a= 1:length(par.AnatGrps)%being super lazy and making this map with loops
     ycoords = cat(1,ycoords,y(:));
 end
 
+Nchannels = length(xcoords);
+
 kcoords = zeros(Nchannels,1);
-for a= 1:length(par.AnatGrps)
-    kcoords(par.AnatGrps(a).Channels+1) = a;
+for a= 1:length(par.SpkGrps)
+    kcoords(par.SpkGrps(a).Channels+1) = a;
 end
+
+connected   = true(Nchannels, 1);
+chanMap     = 1:Nchannels;
+chanMap0ind = chanMap - 1;
 
 
 save(fullfile(basepath,'chanMap.mat'), ...

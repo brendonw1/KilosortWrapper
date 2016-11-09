@@ -27,7 +27,12 @@ ops.root                = rootpath; % 'openEphys' only: where raw files are
 
 ops.fs                  = xml.SampleRate;        % sampling rate
 ops.NchanTOT            = xml.nChannels;           % total number of channels
-ops.Nchan               = xml.nChannels;           % number of active channels
+
+ops.Nchan               = 0; % number of active channels
+for ii=1:length(xml.SpkGrps)
+    ops.Nchan           = ops.Nchan + length(xml.SpkGrps(ii).Channels);
+end
+
 
 Nfilt                   = xml.nChannels*4 - mod(xml.nChannels*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
 if Nfilt == 0

@@ -32,7 +32,7 @@ ycoords      = rez.yc;
 % ycoords      = (1:Nchan)';
 
 par = LoadXml(fullfile(basepath,[basename '.xml']));
-keyboard
+
 totalch = par.nChannels;
 sbefore = 16;%samples before/after for spike extraction
 safter = 24;%... could read from SpkGroups in xml
@@ -62,19 +62,27 @@ m = squeeze(m);%squeeze to 1d vector
 grouplookup = rez.ops.kcoords;%list of group/shank of each channel
 templateshankassignments = grouplookup(m);%for the list of maximal channels, which group is each in 
 allgroups = unique(grouplookup);
+
+%Grp 0 contain discared channels
+allgroups(allgroups==0) = [];
+
 for groupidx = 1:length(allgroups)
-    % for each group loop through, find all templates clus
-    tgroup = allgroups(groupidx);%shank number
-    ttemplateidxs = find(templateshankassignments==tgroup);%which templates/clusters are in that shank
-    ttemplates = templates(:,:,ttemplateidxs);
-    tPCFeatureInds = pcFeatureInds(:,ttemplateidxs);
-    tidx=ismember(clu,ttemplateidxs);%find spikes indices in this shank
-    tclu = clu(tidx);%extract template/cluster assignments of spikes on this shank
-    tspktimes = spktimes(tidx);
     
-%     cluster_names = unique(tclu);
-    gidx = find(rez.ops.kcoords == tgroup);%find all channels in this group
-    channellist = [];
+    %if isfield(par.SpkGrps(groupidx),'Channels')
+    %if ~isempty(par.SpkGrps(groupidx).Channels)
+    % for each group loop through, find all templates clus
+    tgroup          = allgroups(groupidx);%shank number
+    ttemplateidxs   = find(templateshankassignments==tgroup);%which templates/clusters are in that shank
+    ttemplates      = templates(:,:,ttemplateidxs);
+    tPCFeatureInds  = pcFeatureInds(:,ttemplateidxs);
+    
+    tidx            = ismember(clu,ttemplateidxs);%find spikes indices in this shank
+    tclu            = clu(tidx);%extract template/cluster assignments of spikes on this shank
+    tspktimes       = spktimes(tidx);
+    
+    gidx            = find(rez.ops.kcoords == tgroup);%find all channels in this group
+    channellist     = [];
+    
     for ch = 1:length(par.SpkGrps)
         if ismember(gidx(1),par.SpkGrps(ch).Channels+1)
             channellist = par.SpkGrps(ch).Channels+1;
@@ -85,14 +93,15 @@ for groupidx = 1:length(allgroups)
         disp(['Cannot find spkgroup for group ' num2str(groupidx) ])
         continue
     end
+    
     %% spike extraction from dat
-    dat=memmapfile(datpath,'Format','int16');
-    tsampsperwave = (sbefore+safter);
-    ngroupchans = length(channellist);
-    valsperwave = tsampsperwave * ngroupchans;
-    wvforms_all=zeros(length(tspktimes)*tsampsperwave*ngroupchans,1,'int16');
-    wvranges = zeros(length(tspktimes),ngroupchans);
-    wvpowers = zeros(1,length(tspktimes));
+    dat             = memmapfile(datpath,'Format','int16');
+    tsampsperwave   = (sbefore+safter);
+    ngroupchans     = length(channellist);
+    valsperwave     = tsampsperwave * ngroupchans;
+    wvforms_all     = zeros(length(tspktimes)*tsampsperwave*ngroupchans,1,'int16');
+    wvranges        = zeros(length(tspktimes),ngroupchans);
+    wvpowers        = zeros(1,length(tspktimes));
     
     for j=1:length(tspktimes)
         try
@@ -146,26 +155,31 @@ for groupidx = 1:length(allgroups)
     featuresperspike = 3;%kilosort default
     
     % initialize fet file
-    fets = zeros(sum(tidx),size(pcFeatures,2),ngroupchans);
-    pct = pcFeatures(tidx,:,:);
+    fets    = zeros(sum(tidx),size(pcFeatures,2),ngroupchans);
+    pct     = pcFeatures(tidx,:,:);
+    
     %for each cluster/template id, grab at once all spikes in that group
     %and rearrange their features to match the shank order
     allshankclu = unique(tclu);
+    
     for tc = 1:length(allshankclu)
-        tsc = allshankclu(tc);
-        i = find(tclu==tsc);
-        tforig = pct(i,:,:);%the subset of spikes with this clu ide
-        tfnew = tforig; %will overwrite
+        tsc     = allshankclu(tc);
+        i       = find(tclu==tsc);
+        tforig  = pct(i,:,:);%the subset of spikes with this clu ide
+        tfnew   = tforig; %will overwrite
         
-        ii = tdx(tc,:);%handling nan cases where the template channel used was not in the shank
-        gixs = ~isnan(ii);%good vs bad channels... those shank channels that were vs were not found in template pc channels
-        bixs = isnan(ii);
-        g = ii(gixs);
+        ii      = tdx(tc,:);%handling nan cases where the template channel used was not in the shank
+        gixs    = ~isnan(ii);%good vs bad channels... those shank channels that were vs were not found in template pc channels
+        bixs    = isnan(ii);
+        g       = ii(gixs);
         
         tfnew(:,:,gixs) = tforig(:,:,g);%replace ok elements
         tfnew(:,:,bixs) = 0;%zero out channels that are not on this shank
-        
-        fets(i,:,:) = tfnew(:,:,1:length(par.SpkGrps(groupidx).Channels));
+        try
+            fets(i,:,:) = tfnew(:,:,1:length(par.SpkGrps(groupidx).Channels));
+        catch
+            keyboard
+        end
     end
     %extract for relevant spikes only...
     % and heurstically on d3 only take fets for one channel for each original channel in shank... even though kilosort pulls 12 channels of fet data regardless
@@ -207,13 +221,9 @@ for groupidx = 1:length(allgroups)
 
     %res
     fid=fopen(resname,'w'); 
-    % fprintf(fid,'%d\n',tspktimes);
     fprintf(fid,'%.0f\n',tspktimes);
     fclose(fid);
     clear fid
-
-    %fet
-  %  SaveFetIn(fetname,fets);
 
     %spk
     fid=fopen(spkname,'w'); 
@@ -222,6 +232,8 @@ for groupidx = 1:length(allgroups)
     clear fid 
 
     disp(['Shank ' num2str(tgroup) ' done'])
+    %end
+    %end
 end
 
 mkdir(fullfile(basepath,'OriginalClus'))
