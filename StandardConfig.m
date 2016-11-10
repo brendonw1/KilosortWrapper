@@ -29,20 +29,18 @@ ops.fs                  = xml.SampleRate;        % sampling rate
 ops.NchanTOT            = xml.nChannels;           % total number of channels
 
 ops.Nchan               = 0; % number of active channels
-for ii=1:length(xml.SpkGrps)
-    ops.Nchan           = ops.Nchan + length(xml.SpkGrps(ii).Channels);
+for ii=1:2%length(xml.SpkGrps)
+    ops.Nchan           = ops.Nchan + length(xml.ElecGp{ii});
 end
 
-
-Nfilt                   = xml.nChannels*4 - mod(xml.nChannels*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
-if Nfilt == 0
-    ops.Nfilt = 64;
-else
-     ops.Nfilt = Nfilt;
+ops.Nfilt               = ops.Nchan*4 - mod(ops.Nchan*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
+if ops.Nfilt == 0
+    ops.Nfilt = 32;
 end
+
 ops.nt0                 = xml.SpkGrps(1).nSamples; % samples per spike/template
 %ops.nt0 = 32;
-ops.nNeighPC            = min([12 xml.nChannels]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC            = min([12 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 
 % options for channel whitening
@@ -59,7 +57,7 @@ ops.criterionNoiseChannels = 0.5; % fraction of "noise" templates allowed to spa
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
-ops.fshigh              = 1000;   % frequency for high pass filtering
+ops.fshigh              = 600;   % frequency for high pass filtering
 % ops.fslow             = 2000;   % frequency for low pass filtering (optional)
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
@@ -79,7 +77,7 @@ ops.splitT           = .2;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
 ops.initialize      = 'no'; %'fromData' or 'no'
-ops.spkTh           = -.25;      % spike threshold in standard deviations (4)
+ops.spkTh           = 4;       % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])

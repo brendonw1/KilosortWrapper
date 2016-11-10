@@ -4,27 +4,22 @@ function createChannelMapFile_Local(basepath)
 if ~exist('basepath','var')
     basepath = cd;
 end
-d = dir('*.xml');
+d   = dir('*.xml');
 par = LoadXml(fullfile(basepath,d(1).name));
 
-% add bad channel-handling
-
-% xcoords   = ones(Nchannels,1);
-% ycoords   = [1:Nchannels]';
 xcoords = [];
 ycoords = [];
-for a= 1:length(par.SpkGrps)%being super lazy and making this map with loops
+
+for a= 1:2 %:par.nElecGps %being super lazy and making this map with loops
     x = [];
     y = [];
-    tchannels  = par.SpkGrps(a).Channels;
+    tchannels  = par.ElecGp{a};
     for i =1:length(tchannels)
-%         if ~ismember(tchannels(i),badchannels)
-            x(i) = length(tchannels)-i;
-            y(i) = -i*1;
-            if mod(i,2)
-                x(i) = -x(i);
-            end
-%         end
+        x(i) = length(tchannels)-i;
+        y(i) = -i*1;
+        if mod(i,2)
+            x(i) = -x(i);
+        end
     end
     x = x+a*100;
     xcoords = cat(1,xcoords,x(:));
@@ -34,29 +29,28 @@ end
 Nchannels = length(xcoords);
 
 kcoords = zeros(Nchannels,1);
-for a= 1:length(par.SpkGrps)
-    kcoords(par.SpkGrps(a).Channels+1) = a;
+for a= 1:2 %par.nElecGps
+    kcoords(par.ElecGp{a}+1) = a;
 end
 
 connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
 
-
 save(fullfile(basepath,'chanMap.mat'), ...
     'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind')
 
 %%
+% % 
+% Nchannels = 128;
+% connected = true(Nchannels, 1);
+% chanMap   = 1:Nchannels;
+% chanMap0ind = chanMap - 1;
 % 
-Nchannels = 128;
-connected = true(Nchannels, 1);
-chanMap   = 1:Nchannels;
-chanMap0ind = chanMap - 1;
-
-xcoords   = repmat([1 2 3 4]', 1, Nchannels/4);
-xcoords   = xcoords(:);
-ycoords   = repmat(1:Nchannels/4, 4, 1);
-ycoords   = ycoords(:);
+% xcoords   = repmat([1 2 3 4]', 1, Nchannels/4);
+% xcoords   = xcoords(:);
+% ycoords   = repmat(1:Nchannels/4, 4, 1);
+% ycoords   = ycoords(:);
 % kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
 % 
 % save('C:\DATA\Spikes\Piroska\chanMap.mat', ...
