@@ -10,7 +10,7 @@ par = LoadXml(fullfile(basepath,d(1).name));
 xcoords = [];
 ycoords = [];
 
-for a= 1:2 %:par.nElecGps %being super lazy and making this map with loops
+for a= 1:par.nElecGps %being super lazy and making this map with loops
     x = [];
     y = [];
     tchannels  = par.ElecGp{a};
@@ -29,7 +29,7 @@ end
 Nchannels = length(xcoords);
 
 kcoords = zeros(Nchannels,1);
-for a= 1:2 %par.nElecGps
+for a= 1:par.nElecGps
     kcoords(par.ElecGp{a}+1) = a;
 end
 

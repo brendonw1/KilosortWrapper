@@ -29,7 +29,7 @@ ops.fs                  = xml.SampleRate;        % sampling rate
 ops.NchanTOT            = xml.nChannels;           % total number of channels
 
 ops.Nchan               = 0; % number of active channels
-for ii=1:2%length(xml.SpkGrps)
+for ii=1:xml.nElecGps
     ops.Nchan           = ops.Nchan + length(xml.ElecGp{ii});
 end
 
