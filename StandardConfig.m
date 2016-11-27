@@ -38,8 +38,11 @@ if ops.Nfilt == 0
     ops.Nfilt = 32;
 end
 
-ops.nt0                 = xml.SpkGrps(1).nSamples; % samples per spike/template
-%ops.nt0 = 32;
+if isfield(xml.SpkGrps(1),'nSamples')
+    ops.nt0                 = xml.SpkGrps(1).nSamples; % samples per spike/template
+else
+    ops.nt0 = 32;
+end
 ops.nNeighPC            = min([12 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 

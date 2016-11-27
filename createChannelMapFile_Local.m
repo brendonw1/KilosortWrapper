@@ -10,6 +10,11 @@ par = LoadXml(fullfile(basepath,d(1).name));
 xcoords = [];
 ycoords = [];
 
+if par.nElecGps == 0
+    error('No Electrode/Spike Groups found in xml')
+    return
+end
+
 for a= 1:par.nElecGps %being super lazy and making this map with loops
     x = [];
     y = [];
