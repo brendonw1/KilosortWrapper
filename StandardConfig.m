@@ -100,4 +100,3 @@ ops.epu     = Inf;
 
 ops.ForceMaxRAMforDat   = 0; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
 
-end
