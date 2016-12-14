@@ -95,7 +95,9 @@ for groupidx = 1:length(allgroups)
     end
     
     %% spike extraction from dat
-    dat             = memmapfile(datpath,'Format','int16');
+    if groupidx == 1;
+        dat             = memmapfile(datpath,'Format','int16');
+    end
     tsampsperwave   = (sbefore+safter);
     ngroupchans     = length(channellist);
     valsperwave     = tsampsperwave * ngroupchans;
@@ -133,7 +135,6 @@ for groupidx = 1:length(allgroups)
             disp([num2str(j) ' out of ' num2str(length(tspktimes)) ' done'])
         end
     end
-    clear dat
     wvranges = wvranges';
     
     %% Spike features
@@ -235,6 +236,8 @@ for groupidx = 1:length(allgroups)
     %end
     %end
 end
+clear dat
+
 
 mkdir(fullfile(basepath,'OriginalClus'))
 copyfile(fullfile(basepath,[basename,'.clu.*']),fullfile(basepath,'OriginalClus'))

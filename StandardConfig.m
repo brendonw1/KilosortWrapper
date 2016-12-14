@@ -33,7 +33,7 @@ for ii=1:xml.nElecGps
     ops.Nchan           = ops.Nchan + length(xml.ElecGp{ii});
 end
 
-ops.Nfilt               = ops.Nchan*4 - mod(ops.Nchan*4,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
+ops.Nfilt              =   xml.nChannels*6 - mod(xml.nChannels*6,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
 if ops.Nfilt == 0
     ops.Nfilt = 32;
 end
@@ -41,6 +41,7 @@ end
 if isfield(xml.SpkGrps(1),'nSamples')
     ops.nt0                 = xml.SpkGrps(1).nSamples; % samples per spike/template
 else
+    disp('No specification of nSamples in SpikeGroups, using default of 32 samples')
     ops.nt0 = 32;
 end
 ops.nNeighPC            = min([12 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
@@ -53,34 +54,34 @@ ops.whiteningRange      = 32; % how many channels to whiten together (Inf for wh
 
 % define the channel map as a filename (string) or simply an array
 ops.chanMap             = fullfile(rootpath,'chanMap.mat'); % make this file using createChannelMapFile.m
-ops.criterionNoiseChannels = 0.5; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
+ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file
 
 % other options for controlling the model and optimization
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
-ops.fshigh              = 600;   % frequency for high pass filtering
+ops.fshigh              = 300;   % frequency for high pass filtering
 % ops.fslow             = 2000;   % frequency for low pass filtering (optional)
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
-ops.NT                  = 32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory)
+ops.NT                  =  4*32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory)
 % for GPU should be multiple of 32 + ntbuff
 
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
 % the third is the value used in the final pass.
-ops.Th               = [6 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [10 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = [4 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [5 20 20];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
-ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
+ops.momentum         = 1./[20 800];  % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
 ops.mergeT           = .1;           % upper threshold for merging (.1)
-ops.splitT           = .2;           % lower threshold for splitting (.1)
+ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
 ops.initialize      = 'no'; %'fromData' or 'no'
-ops.spkTh           = 4;       % spike threshold in standard deviations (4)
+ops.spkTh           = .25;      % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])
