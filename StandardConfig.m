@@ -34,7 +34,9 @@ for ii=1:xml.nElecGps
 end
 
 ops.Nfilt              =   xml.nChannels*6 - mod(xml.nChannels*6,32);           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
-if ops.Nfilt == 0
+if ops.Nfilt > 1024;
+    ops.Nfilt = 1024;
+elseif ops.Nfilt == 0
     ops.Nfilt = 32;
 end
 
