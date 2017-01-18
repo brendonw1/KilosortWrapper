@@ -15,8 +15,6 @@ if ~exist([basename '.fil'])
     offset = '0';
     
     firfilter(inname,outname,numch,sampl,lowband,highband,forder,gain,offset);
-    
-    
 end
 
 %get xml
