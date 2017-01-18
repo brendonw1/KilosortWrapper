@@ -1,4 +1,5 @@
 function MakeClassicFet(basename,dirname)
+% For now this ONLY WORKS ON LINUX!!
 
 cd(dirname)
 if ~exist([basename '.fil'])
