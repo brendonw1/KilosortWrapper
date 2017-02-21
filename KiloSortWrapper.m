@@ -47,7 +47,7 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
-ops = StandardConfig(XMLFilePath);
+ops = StandardConfig_KSWrapper(XMLFilePath);
 
 tic; % start timer
 %%
