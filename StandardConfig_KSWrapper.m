@@ -1,4 +1,4 @@
-function ops = StandardConfig(XMLfile)
+function ops = StandardConfig_KSWrapper(XMLfile)
 
 % Loads xml parameters (Neuroscope)
 xml = LoadXml(XMLfile);
@@ -21,8 +21,8 @@ else
     ops.fproc = fullfile(rootpath,'temp_wh.dat');
 %     [a,b] = uigetfile;
 %     ops.fproc = [b a];
-    
 end
+
 ops.root                = rootpath; % 'openEphys' only: where raw files are
 
 ops.fs                  = xml.SampleRate;        % sampling rate

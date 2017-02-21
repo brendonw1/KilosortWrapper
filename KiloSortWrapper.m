@@ -62,7 +62,7 @@ end
 %% Lauches KiloSort
 
 disp('PreprocessingData')
-[rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
+[rez, DATA, uproj] = preprocessData_KSWrapper(ops); % preprocess data and extract spikes for initialization
 
 disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
