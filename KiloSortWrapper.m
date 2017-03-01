@@ -47,7 +47,7 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
-ops = StandardConfig(XMLFilePath);
+ops = StandardConfig_KSW(XMLFilePath);
 
 tic; % start timer
 %%
@@ -81,7 +81,7 @@ save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 % disp('Starting to convert to Phy format')
 % rezToPhy(rez, ops.root);
 disp('Starting to convert to Klusters format')
-ConvertKilosort2Neurosuite(basepath,basename,rez)
+ConvertKilosort2Neurosuite_KSW(basepath,basename,rez)
 
 %% remove temporary file
 delete(ops.fproc);
