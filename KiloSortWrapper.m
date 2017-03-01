@@ -1,4 +1,4 @@
-function KiloSortWrapper(basepath,basename,n)
+function KiloSortWrapper(basepath,basename)
 
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
@@ -47,7 +47,11 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
+<<<<<<< HEAD
 ops = StandardConfig_KSW(XMLFilePath);
+=======
+ops = StandardConfig_KSWrapper(XMLFilePath);
+>>>>>>> 81620f71485afe68db5aa8e933b3efbd4ce4f1c8
 
 tic; % start timer
 %%
@@ -62,7 +66,7 @@ end
 %% Lauches KiloSort
 
 disp('PreprocessingData')
-[rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
+[rez, DATA, uproj] = preprocessData_KSWrapper(ops); % preprocess data and extract spikes for initialization
 
 disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
