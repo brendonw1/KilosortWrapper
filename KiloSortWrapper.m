@@ -24,35 +24,35 @@ function KiloSortWrapper(basepath,basename)
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation; either version 2 of the License, or
 % (at your option) any later version.
+disp('Running Kilosort Spike Sorting with the Buzsakilab wrapper')
 
 %% Addpath if needed
-%addpath(genpath('gitrepositories/KiloSort')) % path to kilosort folder
-%addpath(genpath('gitrepositories/npy-matlab')) % path to npy-matlab scripts
+% addpath(genpath('gitrepositories/KiloSort')) % path to kilosort folder
+% addpath(genpath('gitrepositories/npy-matlab')) % path to npy-matlab scripts
 
 %% If function is called without argument
 if ~exist('basepath','var')
    [~,basename] = fileparts(cd);
    basepath = cd; 
 end
-
+cd(basepath)
 %% If a channel map does not exist
+disp('Creating ChannelMapFile')
+createChannelMapFile_Local(basepath)
 if ~exist(fullfile(basepath,'chanMap.mat'))
     createChannelMapFile_Local(basepath)
 end
 
-
 %% default options are in parenthesis after the comment
 XMLFilePath = fullfile(basepath, [basename '.xml']);
-
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
-
 ops = StandardConfig_KSW(XMLFilePath);
 
-tic; % start timer
 %%
 if ops.GPU     
+    disp('Initializing GPU')
     gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
 end
 
@@ -61,7 +61,7 @@ if strcmp(ops.datatype , 'openEphys')
 end
 
 %% Lauches KiloSort
-
+disp('Running Kilosort pipeline')
 disp('PreprocessingData')
 [rez, DATA, uproj] = preprocessData_KSWrapper(ops); % preprocess data and extract spikes for initialization
 
@@ -72,17 +72,24 @@ disp('Extracting final spike times')
 rez = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
-%     rez = merge_posthoc2(rez);
-
+% rez = merge_posthoc2(rez);
 %$ save matlab results file
-disp('Saving')
+disp('Saving rez and ops files')
 save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
+save(fullfile(ops.root,  'ops.mat'), 'ops', '-v7.3');
 
+timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
+savePath = fullfile(basepath, timestamp);
+mkdir(savePath)
+copyfile([basename '.xml'],savePath)
 %% save python results file for Phy
-% disp('Starting to convert to Phy format')
-% rezToPhy(rez, ops.root);
-disp('Starting to convert to Klusters format')
-ConvertKilosort2Neurosuite_KSW(basepath,basename,rez)
+disp('Converting to Phy format')
+rezToPhy(rez, savePath);
 
-%% remove temporary file
-delete(ops.fproc);
+%% save python results file for Klusters
+disp('Converting to Klusters format')
+ConvertKilosort2Neurosuite_KSW(basepath,basename,rez,savePath)
+
+% %% remove temporary file
+% delete(ops.fproc);
+disp('Kilosort Processing complete')

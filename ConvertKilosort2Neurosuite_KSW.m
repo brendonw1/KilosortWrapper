@@ -1,4 +1,4 @@
-function ConvertKilosort2Neurosuite_KSW(basepath,basename,rez)
+function ConvertKilosort2Neurosuite_KSW(basepath,basename,rez,savePath)
 
 % Converts KiloSort templates Klusta into klusters-compatible
 % fet,res,clu,spk files.  Works on a single shank of a recording, assumes a
@@ -61,6 +61,7 @@ amplitudes = rez.st3(:,3);
 pcFeatures = rez.cProjPC;
 pcFeatureInds = uint32(rez.iNeighPC);
 
+mkdir(fullfile(savePath,'OriginalClus'))
 %% do homework for assigning templates to shanks
 % [~,shank]=fileparts(basepath);
 templates = rez.Wraw;
@@ -215,10 +216,11 @@ for groupidx = 1:length(allgroups)
     % fets = cat(1,nfets,fets);
 
     %% writing to clu, res, fet, spk
-    cluname = fullfile(basepath,[basename '.clu.' num2str(tgroup)]);
-    resname = fullfile(basepath,[basename '.res.' num2str(tgroup)]);
-    fetname = fullfile(basepath,[basename '.fet.' num2str(tgroup)]);
-    spkname = fullfile(basepath,[basename '.spk.' num2str(tgroup)]);
+
+    cluname = fullfile(savePath, [basename '.clu.' num2str(tgroup)]);
+    resname = fullfile(savePath, [basename '.res.' num2str(tgroup)]);
+    fetname = fullfile(savePath, [basename '.fet.' num2str(tgroup)]);
+    spkname = fullfile(savePath, [basename '.spk.' num2str(tgroup)]);
   %fet
     SaveFetIn(fetname,fets);
 
@@ -249,10 +251,7 @@ for groupidx = 1:length(allgroups)
     %end
 end
 clear dat
-
-
-mkdir(fullfile(basepath,'OriginalClus'))
-copyfile(fullfile(basepath,[basename,'.clu.*']),fullfile(basepath,'OriginalClus'))
+copyfile(fullfile(savePath, [basename,'.clu.*']),fullfile(savePath, 'OriginalClus'))
 
 function SaveFetIn(FileName, Fet, BufSize);
 
@@ -283,6 +282,4 @@ else
         fprintf(outputfile,formatstring,temp');
     end
 end
-
 fclose(outputfile);
-

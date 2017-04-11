@@ -9,16 +9,22 @@ par = LoadXml(fullfile(basepath,d(1).name));
 
 xcoords = [];
 ycoords = [];
-
 if par.nElecGps == 0
-    error('No Electrode/Spike Groups found in xml')
-    return
+    warning('No Electrode/Spike Groups found in xml.  Using Anatomy Groups instead.')
+    tgroups = par.ElecGp;
+    ngroups = length(tgroups);
+else
+    t = par.AnatGrps;
+    ngroups = length(par.AnatGrps);
+    for g = 1:ngroups
+        tgroups{g} = par.AnatGrps(g).Channels;
+    end
 end
 
-for a= 1:par.nElecGps %being super lazy and making this map with loops
+for a= 1:ngroups %being super lazy and making this map with loops
     x = [];
     y = [];
-    tchannels  = par.ElecGp{a};
+    tchannels  = tgroups{a};
     for i =1:length(tchannels)
         x(i) = length(tchannels)-i;
         y(i) = -i*1;
@@ -34,8 +40,8 @@ end
 Nchannels = length(xcoords);
 
 kcoords = zeros(Nchannels,1);
-for a= 1:par.nElecGps
-    kcoords(par.ElecGp{a}+1) = a;
+for a= 1:ngroups
+    kcoords(tgroups{a}+1) = a;
 end
 
 connected   = true(Nchannels, 1);
