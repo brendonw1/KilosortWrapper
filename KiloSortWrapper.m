@@ -42,24 +42,20 @@ createChannelMapFile_Local(basepath)
 if ~exist(fullfile(basepath,'chanMap.mat'))
     createChannelMapFile_Local(basepath)
 end
-
 %% default options are in parenthesis after the comment
 XMLFilePath = fullfile(basepath, [basename '.xml']);
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
 ops = StandardConfig_KSW(XMLFilePath);
-
 %%
 if ops.GPU     
     disp('Initializing GPU')
     gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
 end
-
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end
-
 %% Lauches KiloSort
 disp('Running Kilosort pipeline')
 disp('PreprocessingData')
@@ -72,24 +68,22 @@ disp('Extracting final spike times')
 rez = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
-% rez = merge_posthoc2(rez);
-%$ save matlab results file
-disp('Saving rez and ops files')
-save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
-save(fullfile(ops.root,  'ops.mat'), 'ops', '-v7.3');
-
+% save matlab results file
 timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
 savePath = fullfile(basepath, timestamp);
 mkdir(savePath)
 copyfile([basename '.xml'],savePath)
+
+disp('Saving rez and ops files')
+% rez = merge_posthoc2(rez);
+save(fullfile(savePath,  'rez.mat'), 'rez', '-v7.3');
+save(fullfile(savePath,  'ops.mat'), 'ops', '-v7.3');
+
 %% save python results file for Phy
 disp('Converting to Phy format')
 rezToPhy(rez, savePath);
-
 %% save python results file for Klusters
 disp('Converting to Klusters format')
 ConvertKilosort2Neurosuite_KSW(basepath,basename,rez,savePath)
-
-% %% remove temporary file
-% delete(ops.fproc);
+% delete(ops.fproc); % remove temporary file
 disp('Kilosort Processing complete')

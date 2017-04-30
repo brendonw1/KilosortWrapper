@@ -52,11 +52,11 @@ ops.nNeigh              = 16; % visualization only (Phy): number of neighboring 
 % options for channel whitening
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
 ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch (1)
-ops.whiteningRange      = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
+ops.whiteningRange      = 64; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 
 % define the channel map as a filename (string) or simply an array
 ops.chanMap             = fullfile(rootpath,'chanMap.mat'); % make this file using createChannelMapFile.m
-ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
+ops.criterionNoiseChannels = 0.0001; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file
 
 % other options for controlling the model and optimization
@@ -64,7 +64,7 @@ ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
 ops.fshigh              = 300;   % frequency for high pass filtering
-% ops.fslow             = 2000;   % frequency for low pass filtering (optional)
+ops.fslow             = 8000;   % frequency for low pass filtering (optional)
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.NT                  =  4*32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory)
