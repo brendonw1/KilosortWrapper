@@ -9,7 +9,7 @@ par = LoadXml(fullfile(basepath,d(1).name));
 
 xcoords = [];
 ycoords = [];
-if par.nElecGps == 0
+if ~isfield(par,'nElecGps')
     warning('No Electrode/Spike Groups found in xml.  Using Anatomy Groups instead.')
     tgroups = par.ElecGp;
     ngroups = length(tgroups);
@@ -27,12 +27,12 @@ for a= 1:ngroups %being super lazy and making this map with loops
     tchannels  = tgroups{a};
     for i =1:length(tchannels)
         x(i) = length(tchannels)-i;
-        y(i) = -i*1;
+        y(i) = -i*10;
         if mod(i,2)
             x(i) = -x(i);
         end
     end
-    x = x+a*100;
+    x = x+a*200;
     xcoords = cat(1,xcoords,x(:));
     ycoords = cat(1,ycoords,y(:));
 end
@@ -47,6 +47,9 @@ end
 connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
+[~,I] =  sort(horzcat(tgroups{:}));
+xcoords = xcoords(I);
+ycoords  = ycoords(I);
 
 save(fullfile(basepath,'chanMap.mat'), ...
     'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind')

@@ -56,7 +56,7 @@ ops.whiteningRange      = 64; % how many channels to whiten together (Inf for wh
 
 % define the channel map as a filename (string) or simply an array
 ops.chanMap             = fullfile(rootpath,'chanMap.mat'); % make this file using createChannelMapFile.m
-ops.criterionNoiseChannels = 0.0001; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
+ops.criterionNoiseChannels = 0.00001; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file
 
 % other options for controlling the model and optimization
@@ -83,12 +83,12 @@ ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
 ops.initialize      = 'no';    %'fromData' or 'no'
-ops.spkTh           = .25;     % spike threshold in standard deviations (4)
+ops.spkTh           = 3.;     % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
-ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
+ops.nFiltMax        = 20000;   % maximum "unique" spikes to consider (10000)
 
 % load predefined principal components (visualization only (Phy): used for features)
 %dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data

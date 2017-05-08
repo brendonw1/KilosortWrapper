@@ -1,4 +1,4 @@
-function KiloSortWrapper(basepath,basename)
+function rez = KiloSortWrapper(basepath,basename)
 
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
@@ -77,13 +77,11 @@ copyfile([basename '.xml'],savePath)
 disp('Saving rez and ops files')
 % rez = merge_posthoc2(rez);
 save(fullfile(savePath,  'rez.mat'), 'rez', '-v7.3');
-save(fullfile(savePath,  'ops.mat'), 'ops', '-v7.3');
-
 %% save python results file for Phy
 disp('Converting to Phy format')
 rezToPhy(rez, savePath);
 %% save python results file for Klusters
 disp('Converting to Klusters format')
 ConvertKilosort2Neurosuite_KSW(basepath,basename,rez,savePath)
-% delete(ops.fproc); % remove temporary file
+delete(ops.fproc); % remove temporary file
 disp('Kilosort Processing complete')
