@@ -65,23 +65,31 @@ disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
 
 disp('Extracting final spike times')
-rez = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
+rez = fullMPMU(rez, DATA); % extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
 % save matlab results file
-timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
-savePath = fullfile(basepath, timestamp);
-mkdir(savePath)
-copyfile([basename '.xml'],savePath)
-
-disp('Saving rez and ops files')
+CreateSubdirectory = 0;
+if CreateSubdirectory
+    timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
+    savepath = fullfile(basepath, timestamp);
+    mkdir(savepath);
+    copyfile([basename '.xml'],savepath);
+else
+    savepath = fullfile(basepath);
+end
+rez.ops.basepath = basepath;
+rez.ops.basename = basename;
+rez.ops.savepath = savepath;
+disp('Saving rez file')
 % rez = merge_posthoc2(rez);
-save(fullfile(savePath,  'rez.mat'), 'rez', '-v7.3');
+save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
 %% save python results file for Phy
 disp('Converting to Phy format')
-rezToPhy(rez, savePath);
+rezToPhy(rez);
 %% save python results file for Klusters
 disp('Converting to Klusters format')
-ConvertKilosort2Neurosuite_KSW(basepath,basename,rez,savePath)
-delete(ops.fproc); % remove temporary file
+ConvertKilosort2Neurosuite_KSW(rez);
+%% Remove temporary file
+delete(ops.fproc);
 disp('Kilosort Processing complete')

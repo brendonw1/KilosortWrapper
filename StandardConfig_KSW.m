@@ -10,7 +10,6 @@ ops.GPU                 = 1; % whether to run this code on an Nvidia GPU (much f
 ops.parfor              = 0; % whether to use parfor to accelerate some parts of the algorithm
 ops.verbose             = 1; % whether to print command line progress
 ops.showfigures         = 0; % whether to plot figures during optimization
-
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openEphys'
 
@@ -97,7 +96,6 @@ ops.nFiltMax        = 20000;   % maximum "unique" spikes to consider (10000)
 % options for posthoc merges (under construction)
 ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 ops.epu     = Inf;
-
 ops.ForceMaxRAMforDat   = 0; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
 
 end
