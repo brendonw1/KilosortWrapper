@@ -1,4 +1,4 @@
-function rez = KiloSortWrapper(basepath,basename)
+function KiloSortWrapper(basepath,basename)
 
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
