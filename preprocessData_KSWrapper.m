@@ -138,12 +138,10 @@ while 1
     dataRAW = dataRAW';
     dataRAW = single(dataRAW);
     dataRAW = dataRAW(:, chanMapConn);
-    
     datr = filter(b1, a1, dataRAW);
     datr = flipud(datr);
     datr = filter(b1, a1, datr);
     datr = flipud(datr);
-    
     switch ops.whitening
         case 'noSpikes'
             smin      = my_min(datr, ops.loc_range, [1 2]);

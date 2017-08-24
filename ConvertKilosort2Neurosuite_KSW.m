@@ -13,6 +13,8 @@ function ConvertKilosort2Neurosuite_KSW(rez)
 %               current directory path, ie most immediate folder name)
 
 % Brendon Watson 2016
+% Edited by Peter Petersen 2017
+
 savepath = rez.ops.savepath;
 basepath = rez.ops.basepath;
 basename = rez.ops.basename;
@@ -167,7 +169,7 @@ for groupidx = 1:length(allgroups)
     end
     
     
-    featuresperspike = 3;%kilosort default
+    featuresperspike = 3; % kilosort default
     
     % initialize fet file
     fets    = zeros(sum(tidx),size(pcFeatures,2),ngroupchans);

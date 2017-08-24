@@ -1,4 +1,4 @@
-function KiloSortWrapper(basepath,basename)
+function savepath = KiloSortWrapper(basepath,basename)
 
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
@@ -49,13 +49,14 @@ if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be 
 end
 ops = StandardConfig_KSW(XMLFilePath);
 %%
-if ops.GPU     
+if ops.GPU
     disp('Initializing GPU')
     gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
 end
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end
+
 %% Lauches KiloSort
 disp('Running Kilosort pipeline')
 disp('PreprocessingData')
@@ -69,7 +70,7 @@ rez = fullMPMU(rez, DATA); % extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
 % save matlab results file
-CreateSubdirectory = 0;
+CreateSubdirectory = 1;
 if CreateSubdirectory
     timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
     savepath = fullfile(basepath, timestamp);
@@ -84,12 +85,15 @@ rez.ops.savepath = savepath;
 disp('Saving rez file')
 % rez = merge_posthoc2(rez);
 save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
+
 %% save python results file for Phy
 disp('Converting to Phy format')
 rezToPhy(rez);
+
 %% save python results file for Klusters
-disp('Converting to Klusters format')
-ConvertKilosort2Neurosuite_KSW(rez);
+% disp('Converting to Klusters format')
+% ConvertKilosort2Neurosuite_KSW(rez);
 %% Remove temporary file
 delete(ops.fproc);
 disp('Kilosort Processing complete')
+
