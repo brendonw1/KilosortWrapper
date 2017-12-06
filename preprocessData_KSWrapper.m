@@ -3,7 +3,6 @@ tic;
 uproj = [];
 ops.nt0 	= getOr(ops, {'nt0'}, 61);
 
-
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end
@@ -51,7 +50,7 @@ end
 NchanTOT = ops.NchanTOT;
 NT       = ops.NT ;
 
-rez.ops         = ops;
+rez.ops = ops;
 rez.xc = xc;
 rez.yc = yc;
 rez.xcoords = xcoords;
@@ -88,7 +87,7 @@ end
 fprintf('Time %3.0fs. Loading raw data... \n', toc);
 fid = fopen(ops.fbinary, 'r');
 ibatch = 0;
-Nchan = rez.ops.Nchan;
+Nchan = length(chanMapConn);% rez.ops.Nchan;
 if ops.GPU
     CC = gpuArray.zeros( Nchan,  Nchan, 'single');
 else
@@ -102,10 +101,7 @@ if strcmp(ops.whitening, 'noSpikes')
     end
 end
 if ~exist('DATA', 'var')
-  
-     DATA =zeros(NT, rez.ops.Nchan,Nbatch_buff,'int16');
-    
-
+     DATA =zeros(NT, Nchan,Nbatch_buff,'int16');
 end
 
 isproc = zeros(Nbatch, 1);
@@ -121,7 +117,7 @@ while 1
     fseek(fid, offset, 'bof');
     buff = fread(fid, [NchanTOT NTbuff], '*int16');
     
-    %         keyboard;
+    % keyboard;
     
     if isempty(buff)
         break;
@@ -154,11 +150,9 @@ while 1
         otherwise
             CC        = CC + (datr' * datr)/NT;
     end
-    
+
     if ibatch<=Nbatch_buff
         DATA(:,:,Nbatch_buff) = gather_try(int16( datr(ioffset + (1:NT),:)));
-    
-      
         isproc(ibatch) = 1;
     end
 end
@@ -202,11 +196,6 @@ if strcmp(ops.initialize, 'fromData')
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
 end
 %
-
-
-
-
-
 
 for ibatch = 1:Nbatch
     if isproc(ibatch) %ibatch<=Nbatch_buff
@@ -288,7 +277,6 @@ for ibatch = 1:Nbatch
     end
     
 end
-
 if strcmp(ops.initialize, 'fromData')
    uproj(i0+1:end, :) = []; 
 end
@@ -301,7 +289,6 @@ if ops.verbose
     fprintf('Time %3.2f. Whitened data written to disk... \n', toc);
     fprintf('Time %3.2f. Preprocessing complete!\n', toc);
 end
-
 
 rez.temp.Nbatch = Nbatch;
 rez.temp.Nbatch_buff = Nbatch_buff;

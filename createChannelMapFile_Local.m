@@ -1,4 +1,8 @@
-function createChannelMapFile_Local(basepath)
+function createChannelMapFile_Local(basepath,electrode_type)
+% electrode_type: Two options at this point: 'staggered' or 'neurogrid'
+if ~exist('electrode_type')
+    electrode_type = 'staggered';
+end
 %  create a channel map file
 
 if ~exist('basepath','var')
@@ -20,31 +24,56 @@ else
         tgroups{g} = par.AnatGrps(g).Channels;
     end
 end
-
-for a= 1:ngroups %being super lazy and making this map with loops
-    x = [];
-    y = [];
-    tchannels  = tgroups{a};
-    for i =1:length(tchannels)
-        x(i) = length(tchannels)-i;
-        y(i) = -i*10;
-        if mod(i,2)
-            x(i) = -x(i);
+switch(electrode_type)
+    case 'staggered'
+        for a= 1:ngroups %being super lazy and making this map with loops
+            x = [];
+            y = [];
+            tchannels  = tgroups{a};
+            for i =1:length(tchannels)
+                x(i) = 10;%length(tchannels)-i;
+                y(i) = -i*10;
+                if mod(i,2)
+                    x(i) = -x(i);
+                end
+            end
+            x = x+a*200;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
         end
-    end
-    x = x+a*200;
-    xcoords = cat(1,xcoords,x(:));
-    ycoords = cat(1,ycoords,y(:));
+    case 'neurogrid'
+        for a= 1:ngroups %being super lazy and making this map with loops
+            x = [];
+            y = [];
+            tchannels  = tgroups{a};
+            for i =1:length(tchannels)
+                x(i) = length(tchannels)-i;
+                y(i) = -i*30;
+            end
+            x = x+a*30;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
+        end
 end
-
 Nchannels = length(xcoords);
 
 kcoords = zeros(Nchannels,1);
-for a= 1:ngroups
-    kcoords(tgroups{a}+1) = a;
+switch(electrode_type)
+    case 'staggered'
+        for a= 1:ngroups
+            kcoords(tgroups{a}+1) = a;
+        end
+    case 'neurogrid'
+        for a= 1:ngroups
+            kcoords(tgroups{a}+1) = floor((a-1)/4)+1;
+        end
 end
+connected = true(Nchannels, 1);
+% Removing dead channels by the skip parameter in the xml
+order = [par.AnatGrps.Channels];
+skip = find([par.AnatGrps.Skip]);
+connected(order(skip)+1) = false;
 
-connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
 [~,I] =  sort(horzcat(tgroups{:}));
