@@ -1,5 +1,4 @@
 function savepath = KiloSortWrapper(basepath,basename)
-
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
 % StandardConfig.m should be in the path or copied to the local folder
@@ -18,36 +17,39 @@ function savepath = KiloSortWrapper(basepath,basename)
 %
 %    Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 
-% Copyright (C) 2016 Brendon Watson
+% Copyright (C) 2016 Brendon Watson and the Buzsakilab
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation; either version 2 of the License, or
 % (at your option) any later version.
-disp('Running Kilosort Spike Sorting with the Buzsakilab wrapper')
+disp('Running Kilosort spike sorting with the Buzsaki lab wrapper')
 
 %% Addpath if needed
 % addpath(genpath('gitrepositories/KiloSort')) % path to kilosort folder
 % addpath(genpath('gitrepositories/npy-matlab')) % path to npy-matlab scripts
 
 %% If function is called without argument
-if ~exist('basepath','var')
+if nargin == 0
    [~,basename] = fileparts(cd);
-   basepath = cd; 
+   basepath = cd;
+elseif nargin == 1
+    [~,basename] = fileparts(basepath);
+    basepath = cd;
 end
 cd(basepath)
-%% If a channel map does not exist
+
+%% Creates a channel map file
 disp('Creating ChannelMapFile')
-createChannelMapFile_Local(basepath)
-if ~exist(fullfile(basepath,'chanMap.mat'))
-    createChannelMapFile_Local(basepath)
-end
+createChannelMapFile_KSW(basepath,'staggered')
+
 %% default options are in parenthesis after the comment
 XMLFilePath = fullfile(basepath, [basename '.xml']);
 if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
     addpath(basepath);
 end
 ops = StandardConfig_KSW(XMLFilePath);
+
 %%
 if ops.GPU
     disp('Initializing GPU')
@@ -60,7 +62,7 @@ end
 %% Lauches KiloSort
 disp('Running Kilosort pipeline')
 disp('PreprocessingData')
-[rez, DATA, uproj] = preprocessData_KSWrapper(ops); % preprocess data and extract spikes for initialization
+[rez, DATA, uproj] = preprocessData_KSW(ops); % preprocess data and extract spikes for initialization
 
 disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
@@ -88,11 +90,12 @@ save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
 
 %% save python results file for Phy
 disp('Converting to Phy format')
-rezToPhy(rez);
+rezToPhy_KSW(rez);
 
 %% save python results file for Klusters
 % disp('Converting to Klusters format')
 % ConvertKilosort2Neurosuite_KSW(rez);
+
 %% Remove temporary file
 delete(ops.fproc);
 disp('Kilosort Processing complete')

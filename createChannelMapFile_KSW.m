@@ -1,9 +1,7 @@
 function createChannelMapFile_Local(basepath,electrode_type)
 % Original function by Brendon and Sam
-% 
 % electrode_type: Two options at this point: 'staggered' or 'neurogrid'
-
-%  create a channel map file
+% create a channel map file
 
 if ~exist('basepath','var')
     basepath = cd;
@@ -48,7 +46,7 @@ switch(electrode_type)
                     x(i) = -x(i);
                 end
             end
-            x = x+a*200;
+            x = x+a*50;
             xcoords = cat(1,xcoords,x(:));
             ycoords = cat(1,ycoords,y(:));
         end
@@ -80,6 +78,7 @@ switch(electrode_type)
         end
 end
 connected = true(Nchannels, 1);
+
 % Removing dead channels by the skip parameter in the xml
 order = [par.AnatGrps.Channels];
 skip = find([par.AnatGrps.Skip]);
