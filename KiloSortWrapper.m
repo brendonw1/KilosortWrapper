@@ -41,13 +41,13 @@ cd(basepath)
 
 %% Creates a channel map file
 disp('Creating ChannelMapFile')
-createChannelMapFile_KSW(basepath,'staggered')
+createChannelMapFile_KSW(basepath,'staggered');
 
 %% default options are in parenthesis after the comment
 XMLFilePath = fullfile(basepath, [basename '.xml']);
-if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
-    addpath(basepath);
-end
+% if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
+%     addpath(basepath);
+% end
 ops = StandardConfig_KSW(XMLFilePath);
 
 %%
@@ -62,7 +62,7 @@ end
 %% Lauches KiloSort
 disp('Running Kilosort pipeline')
 disp('PreprocessingData')
-[rez, DATA, uproj] = preprocessData_KSW(ops); % preprocess data and extract spikes for initialization
+[rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
 
 disp('Fitting templates')
 rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively

@@ -14,7 +14,7 @@ ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openE
 
 %Should get rid of this...
 if isdir('G:\Kilosort')
-    disp('Creating a temporary dat file on the SSD')
+    disp('Creating a temporary dat file on the SSD drive')
     ops.fproc = ['G:\Kilosort\temp_wh.dat'];
 else
     ops.fproc = fullfile(rootpath,'temp_wh.dat');
@@ -22,18 +22,18 @@ end
 ops.root                = rootpath; % 'openEphys' only: where raw files are
 ops.fs                  = xml.SampleRate;        % sampling rate
 
-ops.NchanTOT            = xml.nChannels;           % total number of channels
 load(fullfile(rootpath,'chanMap.mat'))
+ops.NchanTOT            = length(connected); % total number of channels
+
 ops.Nchan = sum(connected>1e-6); % number of active channels
 
-templatemultiplier = 6;
+templatemultiplier = 8;
 ops.Nfilt              =   ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
-if ops.Nfilt > 2024;
-    ops.Nfilt = 2024;
-elseif ops.Nfilt == 0
-    ops.Nfilt = 32;
-end
-ops.Nfilt
+% if ops.Nfilt > 2024;
+%     ops.Nfilt = 2024;
+% elseif ops.Nfilt == 0
+%     ops.Nfilt = 32;
+% end
 ops.nt0 = round(1.6*ops.fs/1000); % window width in samples. 1.6ms at 20kH corresponds to 32 samples
 
 ops.nNeighPC            = min([12 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
@@ -42,21 +42,21 @@ ops.nNeigh              = min([16 ops.Nchan]); % visualization only (Phy): numbe
 % options for channel whitening
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
 ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch (1)
-ops.whiteningRange      = min([32 ops.Nchan]); % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
+ops.whiteningRange      = min([64 ops.Nchan]); % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 
 % define the channel map as a filename (string) or simply an array
 ops.chanMap             = fullfile(rootpath,'chanMap.mat'); % make this file using createChannelMapFile.m
 ops.criterionNoiseChannels = 0.00001; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info).
 
 % other options for controlling the model and optimization
-ops.Nrank               = 3;    % matrix rank of spike template model (3)
-ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
-ops.maxFR               = 40000;  % maximum number of spikes to extract per batch (20000)
-ops.fshigh              = 300;   % frequency for high pass filtering
-ops.fslow             = 8000;   % frequency for low pass filtering (optional)
-ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
-ops.scaleproc           = 200;   % int16 scaling of whitened data
-ops.NT                  =  4*32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) for GPU should be multiple of 32  + ntbuff
+ops.Nrank            = 3;    % matrix rank of spike template model (3)
+ops.nfullpasses      = 6;    % number of complete passes through data during optimization (6)
+ops.maxFR            = 40000;  % maximum number of spikes to extract per batch (20000)
+ops.fshigh           = 300;   % frequency for high pass filtering
+ops.fslow            = 8000;   % frequency for low pass filtering (optional)
+ops.ntbuff           = 64;    % samples of symmetrical buffer for whitening and spike detection
+ops.scaleproc        = 200;   % int16 scaling of whitened data
+ops.NT               =  4*32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) for GPU should be multiple of 32  + ntbuff
 
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
