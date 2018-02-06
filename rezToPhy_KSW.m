@@ -113,7 +113,7 @@ if ~isempty(savepath)
         if strcmp(savepath,rez.ops.root) 
             fprintf(fid,['dat_path = ''', fname ext, '''\n']);
         else 
-            fprintf(fid,['dat_path = ''..\\', fname ext, '''\n']); % Peter: Added '..\' to the path to fit the custom Kilosort folder structure
+            fprintf(fid,['dat_path = ''../', fname ext, '''\n']); % Peter: Added '..\' to the path to fit the custom Kilosort folder structure
         end
         fprintf(fid,['dir_path = ''''\n']); % Added by Peter Petersen
         fprintf(fid,'n_channels_dat = %i\n',rez.ops.NchanTOT);

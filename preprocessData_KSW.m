@@ -1,4 +1,4 @@
-function [rez, DATA, uproj] = preprocessData(ops)
+function [rez, DATA, uproj] = preprocessData_KSW(ops)
 tic;
 uproj = [];
 ops.nt0 	= getOr(ops, {'nt0'}, 61);
@@ -87,7 +87,7 @@ end
 fprintf('Time %3.0fs. Loading raw data... \n', toc);
 fid = fopen(ops.fbinary, 'r');
 ibatch = 0;
-Nchan = length(chanMapConn);% rez.ops.Nchan;
+Nchan = rez.ops.Nchan;
 if ops.GPU
     CC = gpuArray.zeros( Nchan,  Nchan, 'single');
 else
@@ -270,7 +270,7 @@ for ibatch = 1:Nbatch
     end
     
     if ibatch<=Nbatch_buff
-         DATA(:,:,Nbatch_buff) = gather_try(datr);
+         DATA(:,:,ibatch) = gather_try(datr);
     else
         datcpu  = gather_try(int16(datr));
         fwrite(fidW, datcpu, 'int16');

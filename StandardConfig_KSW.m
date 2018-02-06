@@ -61,7 +61,7 @@ ops.NT               =  4*32*1028+ ops.ntbuff;% this is the batch size (try decr
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
 % the third is the value used in the final pass.
-ops.Th               = [6 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.Th               = [6 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
 ops.lam              = [12 40 40];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 800];  % start with high momentum and anneal (1./[20 1000])
@@ -76,7 +76,7 @@ ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and 
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 8;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
-ops.nFiltMax        = 40000;   % maximum "unique" spikes to consider (10000)
+ops.nFiltMax        = 80000;   % maximum "unique" spikes to consider (10000)
 
 % load predefined principal components (visualization only (Phy): used for features)
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data

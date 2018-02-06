@@ -16,6 +16,10 @@ switch(xml_electrode_type)
         electrode_type = 'neurogrid';
     case 'grid'
         electrode_type = 'neurogrid';
+    case 'poly3'
+        electrode_type = 'poly3';
+    case 'poly5'
+        electrode_type = 'poly5';
 end
 if ~exist('electrode_type')
     electrode_type = 'staggered';
@@ -46,6 +50,50 @@ switch(electrode_type)
             xcoords = cat(1,xcoords,x(:));
             ycoords = cat(1,ycoords,y(:));
         end
+    case 'poly3'
+        disp('poly3 probe layout')
+        for a= 1:ngroups %being super lazy and making this map with loops
+            tchannels  = tgroups{a};
+            x = nan(1,length(tchannels));
+            y = nan(1,length(tchannels));
+            extrachannels = mod(length(tchannels),3);
+            polyline = mod([1:length(tchannels)-extrachannels],3);
+            x(find(polyline==1)+extrachannels) = -18;
+            x(find(polyline==2)+extrachannels) = 0;
+            x(find(polyline==0)+extrachannels) = 18;
+            x(1:extrachannels) = 0;
+            y(find(x == 18)) = [1:length(find(x == 18))]*-20;
+            y(find(x == 0)) = [1:length(find(x == 0))]*-20-10+extrachannels*20;
+            y(find(x == -18)) = [1:length(find(x == -18))]*-20;
+            x = x+a*200;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
+        end
+    case 'poly5'
+        disp('poly5 probe layout')
+        for a= 1:ngroups %being super lazy and making this map with loops
+            tchannels  = tgroups{a};
+            x = nan(1,length(tchannels));
+            y = nan(1,length(tchannels));
+            extrachannels = mod(length(tchannels),5);
+            polyline = mod([1:length(tchannels)-extrachannels],5);
+            x(find(polyline==1)+extrachannels) = -2*18;
+            x(find(polyline==2)+extrachannels) = -18;
+            x(find(polyline==3)+extrachannels) = 0;
+            x(find(polyline==4)+extrachannels) = 18;
+            x(find(polyline==0)+extrachannels) = 2*18;
+            x(1:extrachannels) = 18*(-1).^[1:extrachannels];
+            
+            y(find(x == 2*18)) =  [1:length(find(x == 2*18))]*-28;
+            y(find(x == 18)) =    [1:length(find(x == 18))]*-28+14;
+            y(find(x == 0)) =     [1:length(find(x == 0))]*-28;
+            y(find(x == -18)) =   [1:length(find(x == -18))]*-28+14;
+            y(find(x == 2*-18)) = [1:length(find(x == 2*-18))]*-28;
+            
+            x = x+a*200;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
+        end
     case 'neurogrid'
         for a= 1:ngroups %being super lazy and making this map with loops
             x = [];
@@ -64,7 +112,7 @@ Nchannels = length(xcoords);
 
 kcoords = zeros(1,Nchannels);
 switch(electrode_type)
-    case 'staggered'
+    case {'staggered','poly3','poly5'}
         for a= 1:ngroups
             kcoords(tgroups{a}+1) = a;
         end
