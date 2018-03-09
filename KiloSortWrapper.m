@@ -1,4 +1,4 @@
-function savepath = KiloSortWrapper(basepath,basename)
+function savepath = KiloSortWrapper(basepath,basename,config_version)
 % Creates channel map from Neuroscope xml files, runs KiloSort and
 % writes output data in the Neuroscope/Klusters format. 
 % StandardConfig.m should be in the path or copied to the local folder
@@ -30,12 +30,21 @@ disp('Running Kilosort spike sorting with the Buzsaki lab wrapper')
 % addpath(genpath('gitrepositories/npy-matlab')) % path to npy-matlab scripts
 
 %% If function is called without argument
-if nargin == 0
-   [~,basename] = fileparts(cd);
-   basepath = cd;
-elseif nargin == 1
-    [~,basename] = fileparts(basepath);
-    basepath = cd;
+switch nargin
+    case 0
+        [~,basename] = fileparts(cd);
+        basepath = cd;
+    case 1
+        [~,basename] = fileparts(basepath);
+        basepath = cd;
+    case 2
+        [~,basename] = fileparts(basepath);
+        basepath = cd;
+    case 3
+        if isempty(basepath)
+            [~,basename] = fileparts(cd);
+            basepath = cd;
+        end
 end
 cd(basepath)
 
@@ -43,12 +52,28 @@ cd(basepath)
 disp('Creating ChannelMapFile')
 createChannelMapFile_KSW(basepath,'staggered');
 
-%% default options are in parenthesis after the comment
+%% Loading configurations
 XMLFilePath = fullfile(basepath, [basename '.xml']);
 % if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
 %     addpath(basepath);
 % end
-ops = StandardConfig_KSW(XMLFilePath);
+if nargin < 3
+    disp('Running Kilosort with standard settings')
+    ops = KilosortConfiguration(XMLFilePath);
+else
+    disp('Running Kilosort with user specific settings')
+    config_string = str2func(['KilosortConfiguration_' config_version]);
+    ops = config_string(XMLFilePath);
+    clear config_string;
+end
+
+%% % Defining SSD location if any
+if isdir('G:\Kilosort')
+    disp('Creating a temporary dat file on the SSD drive')
+    ops.fproc = ['G:\Kilosort\temp_wh.dat'];
+else
+    ops.fproc = fullfile(rootpath,'temp_wh.dat');
+end
 
 %%
 if ops.GPU

@@ -85,9 +85,9 @@ switch(electrode_type)
             x(1:extrachannels) = 18*(-1).^[1:extrachannels];
             
             y(find(x == 2*18)) =  [1:length(find(x == 2*18))]*-28;
-            y(find(x == 18)) =    [1:length(find(x == 18))]*-28+14;
+            y(find(x == 18)) =    [1:length(find(x == 18))]*-28-14;
             y(find(x == 0)) =     [1:length(find(x == 0))]*-28;
-            y(find(x == -18)) =   [1:length(find(x == -18))]*-28+14;
+            y(find(x == -18)) =   [1:length(find(x == -18))]*-28-14;
             y(find(x == 2*-18)) = [1:length(find(x == 2*-18))]*-28;
             
             x = x+a*200;
