@@ -61,8 +61,8 @@ ops.NT               =  4*32*1028+ ops.ntbuff;% this is the batch size (try decr
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
 % the third is the value used in the final pass.
-ops.Th               = [6 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [12 40 40];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = [5 6 6];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [10 20 20];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 800];  % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
@@ -70,13 +70,13 @@ ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
-ops.initialize      = 'fromData';    %'fromData' or 'no'
-ops.spkTh           = -5;      % spike threshold in standard deviations (4)
+ops.initialize      = 'no';    %'fromData' or 'no'
+ops.spkTh           = 4;      % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 8;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
-ops.nFiltMax        = 80000;   % maximum "unique" spikes to consider (10000)
+ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
 
 % load predefined principal components (visualization only (Phy): used for features)
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data
@@ -86,4 +86,7 @@ ops.wPCA            = dd.Wi(:,1:7); % PCs
 ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 ops.epu     = Inf;
 ops.ForceMaxRAMforDat   = 15000000000; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
+
+% Saving xml content to ops strucuture
+ops.xml = xml;
 end

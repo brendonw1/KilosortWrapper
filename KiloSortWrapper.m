@@ -36,10 +36,11 @@ switch nargin
         basepath = cd;
     case 1
         [~,basename] = fileparts(basepath);
-        basepath = cd;
     case 2
-        [~,basename] = fileparts(basepath);
-        basepath = cd;
+        if isempty(basepath)
+            [~,basename] = fileparts(basepath);
+            basepath = cd;
+        end
     case 3
         if isempty(basepath)
             [~,basename] = fileparts(cd);
@@ -118,8 +119,8 @@ disp('Converting to Phy format')
 rezToPhy_KSW(rez);
 
 %% save python results file for Klusters
-% disp('Converting to Klusters format')
-% ConvertKilosort2Neurosuite_KSW(rez);
+disp('Converting to Klusters format')
+Kilosort2Neurosuite(rez)
 
 %% Remove temporary file
 delete(ops.fproc);

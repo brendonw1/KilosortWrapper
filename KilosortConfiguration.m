@@ -21,12 +21,8 @@ ops.NchanTOT            = length(connected); % total number of channels
 ops.Nchan = sum(connected>1e-6); % number of active channels
 
 templatemultiplier = 8;
-ops.Nfilt              =   ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
-% if ops.Nfilt > 2024;
-%     ops.Nfilt = 2024;
-% elseif ops.Nfilt == 0
-%     ops.Nfilt = 32;
-% end
+ops.Nfilt = ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
+
 ops.nt0 = round(1.6*ops.fs/1000); % window width in samples. 1.6ms at 20kH corresponds to 32 samples
 
 ops.nNeighPC            = min([16 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
@@ -64,7 +60,7 @@ ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
 ops.initialize      = 'fromData';    %'fromData' or 'no'
-ops.spkTh           = -5;      % spike threshold in standard deviations (4)
+ops.spkTh           = -4;      % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 8;       % how many channels to mask up/down ([5])
@@ -79,4 +75,7 @@ ops.wPCA            = dd.Wi(:,1:7); % PCs
 ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 ops.epu     = Inf;
 ops.ForceMaxRAMforDat   = 15000000000; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
+
+% Saving xml content to ops strucuture
+ops.xml = xml;
 end
