@@ -73,7 +73,7 @@ if isdir('G:\Kilosort')
     disp('Creating a temporary dat file on the SSD drive')
     ops.fproc = ['G:\Kilosort\temp_wh.dat'];
 else
-    ops.fproc = fullfile(rootpath,'temp_wh.dat');
+    ops.fproc = fullfile(basepath,'temp_wh.dat');
 end
 
 %%

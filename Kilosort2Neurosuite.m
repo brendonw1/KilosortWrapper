@@ -178,6 +178,7 @@ disp('Complete!')
         
         if isfield(ops,'xml')
             disp('Loading xml from rez for probe layout')
+            xml = ops.xml;
         elseif exist(fullfile(ops.root,[ops.basename,'.xml']))==2
             disp('Loading xml for probe layout from root folder')
             xml = LoadXml(fullfile(ops.root,[ops.basename,'.xml']));
@@ -189,8 +190,8 @@ disp('Complete!')
         waveforms_all = [];
         kcoords2 = unique(ops.kcoords);
         
-        channel_order = [];
-        indicesTokeep = [];
+        channel_order = {};
+        indicesTokeep = {};
         for i = 1:length(kcoords2)
             kcoords3 = kcoords2(i);
             waveforms_all{i} = zeros(sum(kcoords==kcoords3),ops.nt0,size(rez.ia{i},1));
