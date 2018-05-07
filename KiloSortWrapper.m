@@ -1,22 +1,23 @@
 function savepath = KiloSortWrapper(varargin)
 % Creates channel map from Neuroscope xml files, runs KiloSort and
-% writes output data in the Neuroscope/Klusters format. 
-% StandardConfig.m should be in the path or copied to the local folder
+% writes output data to Neurosuite format or Phy.
 % 
-%  USAGE
+% USAGE
 %
-%    KiloSortWrapper()
-%    Should be run from the data folder, and file basenames are the
-%    same as the name as current directory
+% KiloSortWrapper()
+% Should be run from the data folder, and file basenames are the
+% same as the name as current directory
 %
-%    KiloSortWrapper(basepath,basenmae)
+% KiloSortWrapper(varargin)
 %
-%    INPUTS
-%    basepath       path to the folder containing the data
-%    basename       file basenames (of the dat and xml files)
-%    config_version 
+% INPUTS
+% basepath           path to the folder containing the data
+% basename           file basenames (of the dat and xml files)
+% config             Specify a configuration file to use from the
+%                    ConfigurationFiles folder. e.g. 'Omid'
+% GPU_id             Specify the GPU id
 %
-%    Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
+% Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 % 
 % Copyright (C) 2016 Brendon Watson and the Buzsakilab
 %
@@ -33,12 +34,17 @@ basepath = cd;
 
 addParameter(p,'basepath',basepath,@ischar)
 addParameter(p,'basename',basename,@ischar)
+addParameter(p,'GPU_id',1,@isnumeric)
+
 parse(p,varargin{:})
+
 basepath = p.Results.basepath;
 basename = p.Results.basename;
+GPU_id = p.Results.GPU_id;
+
 cd(basepath)
 
-% Checking if dat and xml files exist
+%% Checking if dat and xml files exist
 if ~exist(fullfile(basepath,[basename,'.xml']))
     warning('KilosortWrapper  %s.xml file not in path %s',basename,basepath);
     return
@@ -56,7 +62,7 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 % if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
 %     addpath(basepath);
 % end
-if ~exist('config_version')
+if ~exist('config')
     disp('Running Kilosort with standard settings')
     ops = KilosortConfiguration(XMLFilePath);
 else
@@ -77,7 +83,7 @@ end
 %%
 if ops.GPU
     disp('Initializing GPU')
-    gpudev = gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
+    gpudev = gpuDevice(GPU_id); % initialize GPU (will erase any existing GPU arrays)
 end
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
