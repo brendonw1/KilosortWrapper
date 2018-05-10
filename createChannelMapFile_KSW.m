@@ -1,4 +1,4 @@
-function createChannelMapFile_Local(basepath,electrode_type)
+function createChannelMapFile_Local(basepath,basename,electrode_type)
 % Original function by Brendon and Sam
 % electrode_type: Two options at this point: 'staggered' or 'neurogrid'
 % create a channel map file
@@ -6,8 +6,11 @@ function createChannelMapFile_Local(basepath,electrode_type)
 if ~exist('basepath','var')
     basepath = cd;
 end
-d   = dir('*.xml');
-[par,rxml] = LoadXml(fullfile(basepath,d(1).name));
+if ~exist('basename','var')
+    [~,basename] = fileparts(basepath);
+end
+
+[par,rxml] = LoadXml(fullfile(basepath,[basename,'.xml']));
 xml_electrode_type = rxml.child(1).child(4).value;
 switch(xml_electrode_type)
     case 'staggered'
