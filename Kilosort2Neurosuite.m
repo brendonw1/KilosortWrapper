@@ -1,13 +1,17 @@
 function Kilosort2Neurosuite(rez)
 % Converts KiloSort output (.rez structure) to Neurosuite files: fet,res,clu,spk files.
 % Based on the GPU enable filter from Kilosort and fractions from Brendon
-% Watson's code for saving Neurosuite files.
+% Watson's code for saving Neurosuite files. 
+
+% The script has a high memory usage as all waveforms are loaded into 
+% memory at the same time. If you experience a memory error, increase 
+% your swap/cashe file, and increase the amount of memory MATLAB can use.
 %
 % 1) Waveforms are extracted from the dat file via GPU enabled filters.
 % 2) Features are calculated in parfor loops.
 %
 % Inputs:
-%   rez -  rez structure from Kilosort
+% rez -  rez structure from Kilosort
 %
 % By Peter Petersen 2018
 % petersen.peter@gmail.com
@@ -35,17 +39,19 @@ kcoords2 = unique(template_kcoords);
 ia = [];
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
-    disp(['-Loading data for spike group ', num2str(kcoords3)])
+    if mod(i,4)==1; fprintf('\n'); end
+    fprintf(['Loading data for spike group ', num2str(kcoords3),'. '])
     template_index = find(template_kcoords == kcoords3);
     ia{i} = find(ismember(spikeTemplates,template_index));
 end
-
 rez.ia = ia;
-toc(t1)
-disp('Saving .clu files to disk (cluster indexes)')
+fprintf('\n'); toc(t1)
+
+fprintf('\nSaving .clu files to disk (cluster indexes)')
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
-    disp(['-Saving .clu file for group ', num2str(kcoords3)])
+    if mod(i,4)==1; fprintf('\n'); end
+    fprintf(['Saving .clu file for group ', num2str(kcoords3),'. '])
     tclu = spikeTemplates(ia{i});
     tclu = cat(1,length(unique(tclu)),double(tclu));
     cluname = fullfile([basename '.clu.' num2str(kcoords3)]);
@@ -54,41 +60,44 @@ for i = 1:length(kcoords2)
     fclose(fid);
     clear fid
 end
-toc(t1)
+fprintf('\n'); toc(t1)
 
-disp('Saving .res files to disk (spike times)')
+fprintf('\nSaving .res files to disk (spike times)')
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
     tspktimes = spikeTimes(ia{i});
-    disp(['-Saving .res file for group ', num2str(kcoords3)])
+    if mod(i,4)==1; fprintf('\n'); end
+    fprintf(['Saving .res file for group ', num2str(kcoords3),'. '])
     resname = fullfile([basename '.res.' num2str(kcoords3)]);
     fid=fopen(resname,'w');
     fprintf(fid,'%.0f\n',tspktimes);
     fclose(fid);
     clear fid
 end
-toc(t1)
+fprintf('\n'); toc(t1)
 
-disp('Extracting waveforms')
+fprintf('\nExtracting waveforms\n')
 waveforms_all = Kilosort_ExtractWaveforms(rez);
-toc(t1)
+fprintf('\n'); toc(t1)
 
-disp('Saving .spk files to disk (waveforms)')
+fprintf('\nSaving .spk files to disk (waveforms)')
 for i = 1:length(kcoords2)
-    disp(['-Saving .spk for group ', num2str(kcoords2(i))])
+    if mod(i,4)==1; fprintf('\n'); end
+    fprintf(['Saving .spk for group ', num2str(kcoords2(i)),'. '])
     fid=fopen([basename,'.spk.',num2str(kcoords2(i))],'w');
     fwrite(fid,waveforms_all{i}(:),'int16');
     fclose(fid);
 end
-toc(t1)
+fprintf('\n'); toc(t1)
 
-disp('Computing PCAs')
+fprintf('\nComputing PCAs')
 % Starting parpool if stated in the Kilosort settings
 if (rez.ops.parfor & isempty(gcp('nocreate'))); parpool; end
 
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
-    disp(['-Computing PCAs for group ', num2str(kcoords3)])
+    if mod(i,2)==1; fprintf('\n'); end
+    fprintf(['Computing PCAs for group ', num2str(kcoords3),'. '])
     PCAs_global = zeros(3,sum(kcoords==kcoords3),length(ia{i}));
     waveforms = waveforms_all{i};
     
@@ -106,7 +115,7 @@ for i = 1:length(kcoords2)
             PCAs_global(:,k,:) = pca(zscore(permute(waveforms(k,:,:),[2,3,1]),[],2),'NumComponents',3)';
         end
     end
-    disp(['-Saving .fet files for group ', num2str(kcoords3)])
+    fprintf(['Saving .fet files for group ', num2str(kcoords3),'. '])
     PCAs_global2 = reshape(PCAs_global,size(PCAs_global,1)*size(PCAs_global,2),size(PCAs_global,3));
     factor = (2^15)./max(abs(PCAs_global2'));
     PCAs_global2 = int64(PCAs_global2 .* factor');
@@ -124,10 +133,8 @@ for i = 1:length(kcoords2)
     fprintf(fid,formatstring,Fet);
     fclose(fid);
 end
-toc(t1)
-disp('Complete!')
-
-
+fprintf('\n'); toc(t1)
+fprintf('\nComplete!')
 
 	function waveforms_all = Kilosort_ExtractWaveforms(rez)
         % Extracts waveforms from a dat file using GPU enable filters.
@@ -250,17 +257,15 @@ disp('Complete!')
             for i = 1:length(kcoords2)
                 kcoords3 = kcoords2(i);
                 ch_subset = find(kcoords==kcoords3);
-                temp = find(ismember(spikeTimes(ia{i}), [ops.nt0/2:size(DATA,1)-ops.nt0/2]+ dat_offset));
+                temp = find(ismember(spikeTimes(ia{i}), [ops.nt0/2+1:size(DATA,1)-ops.nt0/2] + dat_offset));
                 temp2 = spikeTimes(ia{i}(temp))-dat_offset;
+                
                 startIndicies = temp2-ops.nt0/2+1;
                 stopIndicies = temp2+ops.nt0/2;
-                channel_indexes = ch_subset(indicesTokeep{i});
-%                 waveforms_all{i}(:,:,temp) = arrayfun(@(i,j,k) DATA(i:j,k), startIndicies, stopIndicies, channel_indexes);
-                for ii = 1:length(temp)
-                    waveforms_all{i}(:,:,temp(ii)) = DATA(temp2(ii)-ops.nt0/2+1:temp2(ii)+ops.nt0/2,ch_subset(indicesTokeep{i}))';
-                end
+                X = cumsum(accumarray(cumsum([1;stopIndicies(:)-startIndicies(:)+1]),[startIndicies(:);0]-[0;stopIndicies(:)]-1)+1);
+                X = X(1:end-1);
+                waveforms_all{i}(:,:,temp) = reshape(DATA(X,ch_subset(indicesTokeep{i}))',length(ch_subset),ops.nt0,[]);
             end
         end
-        fprintf('\n Extraction of waveforms complete \n')
     end
 end
