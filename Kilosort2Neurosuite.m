@@ -199,13 +199,16 @@ fprintf('\nComplete!')
         
         channel_order = {};
         indicesTokeep = {};
+        connected_index = zeros(size(rez.connected));
+        connected_index(rez.connected)=1:length(chanMapConn);
+        
         for i = 1:length(kcoords2)
             kcoords3 = kcoords2(i);
             waveforms_all{i} = zeros(sum(kcoords==kcoords3),ops.nt0,size(rez.ia{i},1));
             if exist('xml')
-                channel_order{i} = xml.AnatGrps(i).Channels+1;
+                channel_order = xml.AnatGrps(i).Channels+1;
                 ch_subset = find(kcoords==kcoords3);
-                [~,indicesTokeep{i},~] = intersect(channel_order{i},ch_subset);
+                [~,indicesTokeep{i},~] = intersect(connected_index(channel_order),ch_subset);
                 [~,indicesTokeep{i}] = sort(indicesTokeep{i});
             end
         end
