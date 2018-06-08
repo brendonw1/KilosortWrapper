@@ -188,8 +188,10 @@ disp('Complete!')
         fid = fopen(ops.fbinary, 'r');
         
         waveforms_all = [];
-        kcoords2 = unique(ops.kcoords);
-        
+%         kcoords2 = unique(ops.kcoords);
+        template_kcoords = kcoords(amplitude_max_channel);
+        kcoords2 = unique(template_kcoords);
+
         channel_order = {};
         indicesTokeep = {};
         for i = 1:length(kcoords2)
