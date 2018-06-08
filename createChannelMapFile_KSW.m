@@ -1,4 +1,4 @@
-function createChannelMapFile_Local(basepath,electrode_type)
+function createChannelMapFile_Local(basepath,basename,electrode_type)
 % Original function by Brendon and Sam
 % electrode_type: Two options at this point: 'staggered' or 'neurogrid'
 % create a channel map file
@@ -6,8 +6,11 @@ function createChannelMapFile_Local(basepath,electrode_type)
 if ~exist('basepath','var')
     basepath = cd;
 end
-d   = dir('*.xml');
-[par,rxml] = LoadXml(fullfile(basepath,d(1).name));
+if ~exist('basename','var')
+    [~,basename] = fileparts(basepath);
+end
+
+[par,rxml] = LoadXml(fullfile(basepath,[basename,'.xml']));
 xml_electrode_type = rxml.child(1).child(4).value;
 switch(xml_electrode_type)
     case 'staggered'
@@ -124,9 +127,13 @@ end
 connected = true(Nchannels, 1);
 
 % Removing dead channels by the skip parameter in the xml
+% order = [par.AnatGrps.Channels];
+% skip = find([par.AnatGrps.Skip]);
+% connected(order(skip)+1) = false;
+
 order = [par.AnatGrps.Channels];
-skip = find([par.AnatGrps.Skip]);
-connected(order(skip)+1) = false;
+skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
+connected(order(skip2)+1) = false;
 
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;

@@ -78,4 +78,9 @@ ops.ForceMaxRAMforDat   = 15000000000; % maximum RAM the algorithm will try to u
 
 % Saving xml content to ops strucuture
 ops.xml = xml;
+
+% Specify if the output should be exported to Phy and/or Neurosuite
+ops.export.phy = 1;
+ops.export.neurosuite = 1;
+
 end
