@@ -62,7 +62,8 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 % if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
 %     addpath(basepath);
 % end
-if ~exist('config')
+ec = exist('config');
+if ec ~= 1
     disp('Running Kilosort with standard settings')
     ops = KilosortConfiguration(XMLFilePath);
 else
