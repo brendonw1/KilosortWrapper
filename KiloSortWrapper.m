@@ -64,20 +64,35 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 % end
 if ~exist('config')
     disp('Running Kilosort with standard settings')
-    ops = KilosortConfiguration(XMLFilePath);
+    ops = KiloSortConfiguration(XMLFilePath);
 else
     disp('Running Kilosort with user specific settings')
-    config_string = str2func(['KilosortConfiguration_' config_version]);
+    config_string = str2func(['KiloSortConfiguration_' config_version]);
     ops = config_string(XMLFilePath);
     clear config_string;
 end
 
 %% % Defining SSD location if any
-if isdir('G:\Kilosort')
-    disp('Creating a temporary dat file on the SSD drive')
-    ops.fproc = ['G:\Kilosort\temp_wh.dat'];
+SSD_path = 'G:\Kilosort';
+
+if isunix
+    fname = KiloSortLinuxDir(basename,basepath,gpuDeviceNum);
+    ops.fproc = fname;
 else
-    ops.fproc = fullfile(basepath,'temp_wh.dat');
+    if isdir(SSD_path)
+        FileObj = java.io.File(SSD_path);
+        free_bytes = FileObj.getFreeSpace;
+        dat_file = dir(fullfile(basepath,[basename,'.dat']));
+        if dat_file.bytes*1.1<FileObj.getFreeSpace
+            disp('Creating a temporary dat file on the SSD drive')
+            ops.fproc = fullfile(SSD_path, [basename,'_temp_wh.dat']);
+        else
+            warning('Not sufficient space on SSD drive. Creating local dat file instead')
+            ops.fproc = fullfile(rootpath,'temp_wh.dat');
+        end
+    else
+        ops.fproc = fullfile(rootpath,'temp_wh.dat');
+    end
 end
 
 %%
@@ -123,11 +138,22 @@ if ops.export.phy
     disp('Converting to Phy format')
     rezToPhy_KSW(rez);
 end
+
 %% export Neurosuite files
 if ops.export.neurosuite
     disp('Converting to Klusters format')
-    Kilosort2Neurosuite(rez)
+    load('rez.mat')
+    rez.ops.root = pwd;
+    clustering_path = pwd;
+    basename = rez.ops.basename;
+    rez.ops.fbinary = fullfile(pwd, [basename,'.dat']);
+    KiloSort2Neurosuite(rez)
+    
+    writeNPY(rez.ops.kcoords, fullfile(clustering_path, 'channel_shanks.npy'));
+
+    phy_export_units(clustering_path,basename);
 end
+
 %% Remove temporary file and resetting GPU
 delete(ops.fproc);
 reset(gpudev)

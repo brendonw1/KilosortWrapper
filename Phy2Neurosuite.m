@@ -1,5 +1,5 @@
-function Kilosort2Neurosuite(rez)
-% Converts KiloSort output (.rez structure) to Neurosuite files: fet,res,clu,spk files.
+function Phy2Neurosuite(basepath,clustering_path)
+% Converts Phy output (NPY files) to Neurosuite files: fet, res, clu, spk files.
 % Based on the GPU enable filter from Kilosort and fractions from Brendon
 % Watson's code for saving Neurosuite files. 
 
@@ -11,37 +11,37 @@ function Kilosort2Neurosuite(rez)
 % 2) Features are calculated in parfor loops.
 %
 % Inputs:
-% rez -  rez structure from Kilosort
+% path -  rez structure from Kilosort
 %
 % By Peter Petersen 2018
 % petersen.peter@gmail.com
 
 t1 = tic;
-spikeTimes = uint64(rez.st3(:,1)); % uint64
-spikeTemplates = uint32(rez.st3(:,2)); % uint32 % template id for each spike
-kcoords = rez.ops.kcoords;
+cd(clustering_path)
+load('rez.mat')
+rez.ops.root = clustering_path;
 basename = rez.ops.basename;
+rez.ops.fbinary = fullfile(basepath, [basename,'.dat']);
+rez.ops.fshigh = 500;
+
+spikeTimes = uint64(rez.st3(:,1)); % uint64
+spikeTemplates = double(readNPY(fullfile(clustering_path, 'spike_clusters.npy')));
+spike_clusters = unique(spikeTemplates);
+cluster_ids = readNPY(fullfile(clustering_path, 'cluster_ids.npy'));
+template_kcoords = readNPY(fullfile(clustering_path, 'shanks.npy'));
+
+kcoords = rez.ops.kcoords;
 
 Nchan = rez.ops.Nchan;
 samples = rez.ops.nt0;
 
-templates = zeros(Nchan, size(rez.W,1), rez.ops.Nfilt, 'single');
-for iNN = 1:rez.ops.Nfilt
-    templates(:,:,iNN) = squeeze(rez.U(:,iNN,:)) * squeeze(rez.W(:,iNN,:))';
-end
-amplitude_max_channel = [];
-for i = 1:size(templates,3)
-    [~,amplitude_max_channel(i)] = max(range(templates(:,:,i)'));
-end
-
-template_kcoords = kcoords(amplitude_max_channel);
 kcoords2 = unique(template_kcoords);
 ia = [];
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
     if mod(i,4)==1; fprintf('\n'); end
     fprintf(['Loading data for spike group ', num2str(kcoords3),'. '])
-    template_index = find(template_kcoords == kcoords3);
+    template_index = cluster_ids(find(template_kcoords == kcoords3));
     ia{i} = find(ismember(spikeTemplates,template_index));
 end
 rez.ia = ia;
