@@ -73,7 +73,7 @@ else
 end
 
 %% % Defining SSD location if any
-SSD_path = 'G:\Kilosort';
+SSD_path = 'K:\Kilosort';
 
 if isunix
     fname = KiloSortLinuxDir(basename,basepath,gpuDeviceNum);

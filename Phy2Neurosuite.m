@@ -18,13 +18,26 @@ function Phy2Neurosuite(basepath,clustering_path)
 
 t1 = tic;
 cd(clustering_path)
-load('rez.mat')
+if exist('rez.mat')
+    load('rez.mat')
+    spikeTimes = uint64(rez.st3(:,1)); % uint64
+    basename = rez.ops.basename;
+elseif exist(fullfile(basepath,'ops.mat'))
+    rez = [];
+    load(fullfile(basepath,'ops.mat'))
+    rez.ops = ops;
+    spikeTimes = readNPY(fullfile(clustering_path, 'spike_times.npy'));
+%     load(fullfile(basepath,'chanMap.mat'))
+    rez.connected = ones(1,ops.NchanTOT);
+    basename = bz_BasenameFromBasepath(basepath);
+else
+    disp('No rez.mat or ops.mat file exist!')
+end
+
 rez.ops.root = clustering_path;
-basename = rez.ops.basename;
 rez.ops.fbinary = fullfile(basepath, [basename,'.dat']);
 rez.ops.fshigh = 500;
 
-spikeTimes = uint64(rez.st3(:,1)); % uint64
 spikeTemplates = double(readNPY(fullfile(clustering_path, 'spike_clusters.npy')));
 spike_clusters = unique(spikeTemplates);
 cluster_ids = readNPY(fullfile(clustering_path, 'cluster_ids.npy'));
