@@ -163,7 +163,7 @@ fprintf('\nComplete!')
         % Extracting content from the .rez file
         ops = rez.ops;
         NT = ops.NT;
-        if exist('ops.fbinary') == 0
+        if exist(ops.fbinary) == 0
             warning(['Binary file does not exist: ', ops.fbinary])
         end
         d = dir(ops.fbinary);

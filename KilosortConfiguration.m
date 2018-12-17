@@ -20,7 +20,7 @@ ops.NchanTOT            = length(connected); % total number of channels
 
 ops.Nchan = sum(connected>1e-6); % number of active channels
 
-templatemultiplier = 8;
+templatemultiplier = 8; % 8 times more templates created than Nchan
 ops.Nfilt = ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
 
 ops.nt0 = round(1.6*ops.fs/1000); % window width in samples. 1.6ms at 20kH corresponds to 32 samples
@@ -50,7 +50,7 @@ ops.NT               = 32*1028+ ops.ntbuff;% this is the batch size (try decreas
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
 % the third is the value used in the final pass.
-ops.Th               = [6 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.Th               = [6 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
 ops.lam              = [12 40 40];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 800];  % start with high momentum and anneal (1./[20 1000])
