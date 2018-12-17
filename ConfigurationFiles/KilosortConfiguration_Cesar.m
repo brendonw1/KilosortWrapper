@@ -1,4 +1,4 @@
-function ops = KilosortConfiguration(XMLfile)
+function ops = StandardConfig_KSW(XMLfile)
 
 % Loads xml parameters (Neuroscope)
 xml = LoadXml(XMLfile);
@@ -12,6 +12,13 @@ ops.showfigures         = 0; % whether to plot figures during optimization
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = [XMLfile(1:end-3) 'dat']; % will be created for 'openEphys'
 
+%Should get rid of this...
+if isdir('G:\Kilosort')
+    disp('Creating a temporary dat file on the SSD drive')
+    ops.fproc = ['G:\Kilosort\temp_wh.dat'];
+else
+    ops.fproc = fullfile(rootpath,'temp_wh.dat');
+end
 ops.root                = rootpath; % 'openEphys' only: where raw files are
 ops.fs                  = xml.SampleRate;        % sampling rate
 
@@ -20,9 +27,13 @@ ops.NchanTOT            = length(connected); % total number of channels
 
 ops.Nchan = sum(connected>1e-6); % number of active channels
 
-templatemultiplier = 8; % 8 times more templates created than Nchan
-ops.Nfilt = ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
-
+templatemultiplier = 8;
+ops.Nfilt              =   ops.Nchan*templatemultiplier - mod(ops.Nchan*templatemultiplier,32); % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)
+% if ops.Nfilt > 2024;
+%     ops.Nfilt = 2024;
+% elseif ops.Nfilt == 0
+%     ops.Nfilt = 32;
+% end
 ops.nt0 = round(1.6*ops.fs/1000); % window width in samples. 1.6ms at 20kH corresponds to 32 samples
 
 ops.nNeighPC            = min([16 ops.Nchan]); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
@@ -45,13 +56,13 @@ ops.fshigh           = 500;   % frequency for high pass filtering
 ops.fslow            = 8000;   % frequency for low pass filtering (optional)
 ops.ntbuff           = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc        = 200;   % int16 scaling of whitened data
-ops.NT               = 32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) for GPU should be multiple of 32  + ntbuff
+ops.NT               =  4*32*1028+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) for GPU should be multiple of 32  + ntbuff
 
 % the following options can improve/deteriorate results.
 % when multiple values are provided for an option, the first two are beginning and ending anneal values,
 % the third is the value used in the final pass.
-ops.Th               = [6 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [12 40 40];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = [5 6 6];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [10 20 20];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 800];  % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
@@ -60,12 +71,12 @@ ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 % options for initializing spikes from data
 ops.initialize      = 'no';    %'fromData' or 'no'
-ops.spkTh           = -4;      % spike threshold in standard deviations (4)
+ops.spkTh           = 4;      % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 8;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
-ops.nFiltMax        = 80000;   % maximum "unique" spikes to consider (10000)
+ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
 
 % load predefined principal components (visualization only (Phy): used for features)
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data
@@ -78,9 +89,4 @@ ops.ForceMaxRAMforDat   = 15000000000; % maximum RAM the algorithm will try to u
 
 % Saving xml content to ops strucuture
 ops.xml = xml;
-
-% Specify if the output should be exported to Phy and/or Neurosuite
-ops.export.phy = 1;
-ops.export.neurosuite = 0;
-
 end

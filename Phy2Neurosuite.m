@@ -1,5 +1,5 @@
-function Kilosort2Neurosuite(rez)
-% Converts KiloSort output (.rez structure) to Neurosuite files: fet,res,clu,spk files.
+function Phy2Neurosuite(basepath,clustering_path)
+% Converts Phy output (NPY files) to Neurosuite files: fet, res, clu, spk files.
 % Based on the GPU enable filter from Kilosort and fractions from Brendon
 % Watson's code for saving Neurosuite files. 
 
@@ -11,37 +11,50 @@ function Kilosort2Neurosuite(rez)
 % 2) Features are calculated in parfor loops.
 %
 % Inputs:
-% rez -  rez structure from Kilosort
+% path -  rez structure from Kilosort
 %
 % By Peter Petersen 2018
 % petersen.peter@gmail.com
 
 t1 = tic;
-spikeTimes = uint64(rez.st3(:,1)); % uint64
-spikeTemplates = uint32(rez.st3(:,2)); % uint32 % template id for each spike
+cd(clustering_path)
+if exist('rez.mat')
+    load('rez.mat')
+    spikeTimes = uint64(rez.st3(:,1)); % uint64
+    basename = rez.ops.basename;
+elseif exist(fullfile(basepath,'ops.mat'))
+    rez = [];
+    load(fullfile(basepath,'ops.mat'))
+    rez.ops = ops;
+    spikeTimes = readNPY(fullfile(clustering_path, 'spike_times.npy'));
+%     load(fullfile(basepath,'chanMap.mat'))
+    rez.connected = ones(1,ops.NchanTOT);
+    basename = bz_BasenameFromBasepath(basepath);
+else
+    disp('No rez.mat or ops.mat file exist!')
+end
+
+rez.ops.root = clustering_path;
+rez.ops.fbinary = fullfile(basepath, [basename,'.dat']);
+rez.ops.fshigh = 500;
+
+spikeTemplates = double(readNPY(fullfile(clustering_path, 'spike_clusters.npy')));
+spike_clusters = unique(spikeTemplates);
+cluster_ids = readNPY(fullfile(clustering_path, 'cluster_ids.npy'));
+template_kcoords = readNPY(fullfile(clustering_path, 'shanks.npy'));
+
 kcoords = rez.ops.kcoords;
-basename = rez.ops.basename;
 
 Nchan = rez.ops.Nchan;
 samples = rez.ops.nt0;
 
-templates = zeros(Nchan, size(rez.W,1), rez.ops.Nfilt, 'single');
-for iNN = 1:rez.ops.Nfilt
-    templates(:,:,iNN) = squeeze(rez.U(:,iNN,:)) * squeeze(rez.W(:,iNN,:))';
-end
-amplitude_max_channel = [];
-for i = 1:size(templates,3)
-    [~,amplitude_max_channel(i)] = max(range(templates(:,:,i)'));
-end
-
-template_kcoords = kcoords(amplitude_max_channel);
 kcoords2 = unique(template_kcoords);
 ia = [];
 for i = 1:length(kcoords2)
     kcoords3 = kcoords2(i);
     if mod(i,4)==1; fprintf('\n'); end
     fprintf(['Loading data for spike group ', num2str(kcoords3),'. '])
-    template_index = find(template_kcoords == kcoords3);
+    template_index = cluster_ids(find(template_kcoords == kcoords3));
     ia{i} = find(ismember(spikeTemplates,template_index));
 end
 rez.ia = ia;
@@ -150,7 +163,7 @@ fprintf('\nComplete!')
         % Extracting content from the .rez file
         ops = rez.ops;
         NT = ops.NT;
-        if exist('ops.fbinary') == 0
+        if exist(ops.fbinary) == 0
             warning(['Binary file does not exist: ', ops.fbinary])
         end
         d = dir(ops.fbinary);
@@ -199,10 +212,8 @@ fprintf('\nComplete!')
         fid = fopen(ops.fbinary, 'r');
         
         waveforms_all = [];
-%         kcoords2 = unique(ops.kcoords);
-        template_kcoords = kcoords(amplitude_max_channel);
-        kcoords2 = unique(template_kcoords);
-
+        kcoords2 = unique(ops.kcoords);
+        
         channel_order = {};
         indicesTokeep = {};
 %         connected_index = zeros(size(rez.connected));
