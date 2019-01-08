@@ -65,7 +65,7 @@ XMLFilePath = fullfile(basepath, [basename '.xml']);
 ec = exist('config');
 if ec ~= 1
     disp('Running Kilosort with standard settings')
-    ops = KiloSortConfiguration(XMLFilePath);
+    ops = KilosortConfiguration(XMLFilePath);
 else
     disp('Running Kilosort with user specific settings')
     config_string = str2func(['KiloSortConfiguration_' config_version]);
@@ -89,10 +89,10 @@ else
             ops.fproc = fullfile(SSD_path, [basename,'_temp_wh.dat']);
         else
             warning('Not sufficient space on SSD drive. Creating local dat file instead')
-            ops.fproc = fullfile(rootpath,'temp_wh.dat');
+            ops.fproc = fullfile(basepath,'temp_wh.dat');
         end
     else
-        ops.fproc = fullfile(rootpath,'temp_wh.dat');
+        ops.fproc = fullfile(basepath,'temp_wh.dat');
     end
 end
 
