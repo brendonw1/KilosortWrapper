@@ -11,25 +11,35 @@ function Phy2Neurosuite(basepath,clustering_path)
 % 2) Features are calculated in parfor loops.
 %
 % Inputs:
-% path -  rez structure from Kilosort
+% basepath -  location of your data / dat file. rez structure from Kilosort
+% clustering_path - location of your kilosort output. 
 %
 % By Peter Petersen 2018
 % petersen.peter@gmail.com
 
 t1 = tic;
 cd(clustering_path)
+
 if exist('rez.mat')
     load('rez.mat')
     spikeTimes = uint64(rez.st3(:,1)); % uint64
-    basename = rez.ops.basename;
+    if isfield(rez.ops,'basename')
+        basename = rez.ops.basename;
+    else
+        basename = bz_BasenameFromBasepath(rez.ops.root);
+        rez.ops.basename = basename;
+    end
 elseif exist(fullfile(basepath,'ops.mat'))
     rez = [];
     load(fullfile(basepath,'ops.mat'))
     rez.ops = ops;
-    spikeTimes = readNPY(fullfile(clustering_path, 'spike_times.npy'));
+    spikeTimes = readNPY(fullfile(clustering_path, 'spike_times.npy'))';
+    rez.st3(:,1) = spikeTimes;
 %     load(fullfile(basepath,'chanMap.mat'))
     rez.connected = ones(1,ops.NchanTOT);
     basename = bz_BasenameFromBasepath(basepath);
+    ops.basename = basename;
+    rez.ops = ops;
 else
     disp('No rez.mat or ops.mat file exist!')
 end
@@ -42,8 +52,12 @@ spikeTemplates = double(readNPY(fullfile(clustering_path, 'spike_clusters.npy'))
 spike_clusters = unique(spikeTemplates);
 cluster_ids = readNPY(fullfile(clustering_path, 'cluster_ids.npy'));
 template_kcoords = readNPY(fullfile(clustering_path, 'shanks.npy'));
-
-kcoords = rez.ops.kcoords;
+template_kcoords33 = readNPY(fullfile(clustering_path, 'channel_positions.npy'));
+if isfield(rez.ops,'kcoords')
+    kcoords = rez.ops.kcoords;
+else
+    kcoords = readNPY(fullfile(clustering_path, 'channel_shanks.npy'));
+end
 
 Nchan = rez.ops.Nchan;
 samples = rez.ops.nt0;
@@ -170,8 +184,8 @@ fprintf('\nComplete!')
 
         NchanTOT = ops.NchanTOT;
         chanMap = ops.chanMap;
-        chanMapConn = chanMap(rez.connected>1e-6);
-        kcoords = ops.kcoords;
+        chanMapConn = readNPY(fullfile('channel_map.npy'))+1;
+        kcoords = readNPY(fullfile('channel_shanks.npy')); % ops.kcoords;
         ia = rez.ia;
         spikeTimes = rez.st3(:,1);
         
@@ -212,7 +226,7 @@ fprintf('\nComplete!')
         fid = fopen(ops.fbinary, 'r');
         
         waveforms_all = [];
-        kcoords2 = unique(ops.kcoords);
+        kcoords2 = unique(kcoords); % ops.kcoords
         
         channel_order = {};
         indicesTokeep = {};
@@ -223,7 +237,7 @@ fprintf('\nComplete!')
             kcoords3 = kcoords2(i);
             waveforms_all{i} = zeros(sum(kcoords==kcoords3),ops.nt0,size(rez.ia{i},1));
             if exist('xml')
-                [channel_order,channel_index] = sort(xml.AnatGrps(kcoords2(i)).Channels+1);
+                [channel_order,channel_index] = sort(xml.SpkGrps(kcoords2(i)).Channels+1);
                 [~,indicesTokeep{i},~] = intersect(chanMapConn,channel_order);
                 
                 %indicesTokeep{i} = connected_index(indicesTokeep{i});

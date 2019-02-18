@@ -73,27 +73,22 @@ else
     clear config_string;
 end
 
-%% % Defining SSD location if any
+%% % Define SSD location if any. Comment the line if no SSD is present
 SSD_path = 'K:\Kilosort';
 
-if isunix
-    fname = KiloSortLinuxDir(basename,basepath,gpuDeviceNum);
-    ops.fproc = fname;
-else
-    if isdir(SSD_path)
-        FileObj = java.io.File(SSD_path);
-        free_bytes = FileObj.getFreeSpace;
-        dat_file = dir(fullfile(basepath,[basename,'.dat']));
-        if dat_file.bytes*1.1<FileObj.getFreeSpace
-            disp('Creating a temporary dat file on the SSD drive')
-            ops.fproc = fullfile(SSD_path, [basename,'_temp_wh.dat']);
-        else
-            warning('Not sufficient space on SSD drive. Creating local dat file instead')
-            ops.fproc = fullfile(basepath,'temp_wh.dat');
-        end
+if isdir(SSD_path)
+    FileObj = java.io.File(SSD_path);
+    free_bytes = FileObj.getFreeSpace;
+    dat_file = dir(fullfile(basepath,[basename,'.dat']));
+    if dat_file.bytes*1.1<FileObj.getFreeSpace
+        disp('Creating a temporary dat file on the SSD drive')
+        ops.fproc = fullfile(SSD_path, [basename,'_temp_wh.dat']);
     else
+        warning('Not sufficient space on SSD drive. Creating local dat file instead')
         ops.fproc = fullfile(basepath,'temp_wh.dat');
     end
+else
+    ops.fproc = fullfile(basepath,'temp_wh.dat');
 end
 
 %%
@@ -148,7 +143,7 @@ if ops.export.neurosuite
     clustering_path = pwd;
     basename = rez.ops.basename;
     rez.ops.fbinary = fullfile(pwd, [basename,'.dat']);
-    KiloSort2Neurosuite(rez)
+    Kilosort2Neurosuite(rez)
     
     writeNPY(rez.ops.kcoords, fullfile(clustering_path, 'channel_shanks.npy'));
 
