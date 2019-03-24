@@ -27,6 +27,7 @@ function savepath = KiloSortWrapper(varargin)
 % (at your option) any later version.
 disp('Running Kilosort spike sorting with the Buzsaki lab wrapper')
 
+
 %% If function is called without argument
 p = inputParser;
 basepath = cd;
@@ -35,12 +36,18 @@ basepath = cd;
 addParameter(p,'basepath',basepath,@ischar)
 addParameter(p,'basename',basename,@ischar)
 addParameter(p,'GPU_id',1,@isnumeric)
+addParameter(p,'SSD_path','K:\Kilosort',@ischar)
+addParameter(p,'CreateSubdirectory',1,@isnumeric)
+addParameter(p,'performAutoCluster',0,@isnumeric)
 
 parse(p,varargin{:})
 
 basepath = p.Results.basepath;
 basename = p.Results.basename;
 GPU_id = p.Results.GPU_id;
+SSD_path = p.Results.SSD_path;
+CreateSubdirectory = p.Results.CreateSubdirectory;
+performAutoCluster = p.Results.performAutoCluster;
 
 cd(basepath)
 
@@ -74,8 +81,6 @@ else
 end
 
 %% % Define SSD location if any. Comment the line if no SSD is present
-SSD_path = 'K:\Kilosort';
-
 if isdir(SSD_path)
     FileObj = java.io.File(SSD_path);
     free_bytes = FileObj.getFreeSpace;
@@ -113,7 +118,7 @@ rez = fullMPMU(rez, DATA); % extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
 % save matlab results file
-CreateSubdirectory = 1;
+
 if CreateSubdirectory
     timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
     savepath = fullfile(basepath, timestamp);
@@ -133,6 +138,10 @@ save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
 if ops.export.phy
     disp('Converting to Phy format')
     rezToPhy_KSW(rez);
+end
+% AutoCluster the Phy output
+if performAutoCluster
+    PhyAutoClustering(savepath);
 end
 
 %% export Neurosuite files
@@ -155,3 +164,4 @@ delete(ops.fproc);
 reset(gpudev)
 gpuDevice([])
 disp('Kilosort Processing complete')
+
