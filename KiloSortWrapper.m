@@ -4,18 +4,12 @@ function savepath = KiloSortWrapper(varargin)
 % 
 % USAGE
 %
-% KiloSortWrapper()
-% Should be run from the data folder, and file basenames are the
-% same as the name as current directory
+% KiloSortWrapper
+% Run from data folder. File basenames must be the
+% same as the name as current folder
 %
 % KiloSortWrapper(varargin)
-%
-% INPUTS
-% basepath           path to the folder containing the data
-% basename           file basenames (of the dat and xml files)
-% config             Specify a configuration file to use from the
-%                    ConfigurationFiles folder. e.g. 'Omid'
-% GPU_id             Specify the GPU id
+% Check varargin description below when input parameters are parsed
 %
 % Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 % 
@@ -25,20 +19,21 @@ function savepath = KiloSortWrapper(varargin)
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation; either version 2 of the License, or
 % (at your option) any later version.
+
 disp('Running Kilosort spike sorting with the Buzsaki lab wrapper')
 
-
-%% If function is called without argument
+%% Parsing inputs
 p = inputParser;
 basepath = cd;
 [~,basename] = fileparts(basepath);
 
-addParameter(p,'basepath',basepath,@ischar)
-addParameter(p,'basename',basename,@ischar)
-addParameter(p,'GPU_id',1,@isnumeric)
-addParameter(p,'SSD_path','K:\Kilosort',@ischar)
-addParameter(p,'CreateSubdirectory',1,@isnumeric)
-addParameter(p,'performAutoCluster',0,@isnumeric)
+addParameter(p,'basepath',basepath,@ischar)         % path to the folder containing the data
+addParameter(p,'basename',basename,@ischar)         % file basenames (of the dat and xml files)
+addParameter(p,'GPU_id',1,@isnumeric)               % Specify the GPU_id
+addParameter(p,'SSD_path','K:\Kilosort',@ischar)    % Path to SSD disk. Make it empty to disable SSD
+addParameter(p,'CreateSubdirectory',1,@isnumeric)   % Puts the Kilosort output into a subfolder
+addParameter(p,'performAutoCluster',0,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy
+addParameter(p,'config','',@ischar)                 % Specify a configuration file to use from the ConfigurationFiles folder. e.g. 'Omid'
 
 parse(p,varargin{:})
 
@@ -48,6 +43,7 @@ GPU_id = p.Results.GPU_id;
 SSD_path = p.Results.SSD_path;
 CreateSubdirectory = p.Results.CreateSubdirectory;
 performAutoCluster = p.Results.performAutoCluster;
+config = p.Results.config;
 
 cd(basepath)
 
@@ -66,11 +62,8 @@ createChannelMapFile_KSW(basepath,basename,'staggered');
 
 %% Loading configurations
 XMLFilePath = fullfile(basepath, [basename '.xml']);
-% if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
-%     addpath(basepath);
-% end
-ec = exist('config');
-if ec ~= 1
+
+if isempty(config)
     disp('Running Kilosort with standard settings')
     ops = KilosortConfiguration(XMLFilePath);
 else
@@ -80,7 +73,7 @@ else
     clear config_string;
 end
 
-%% % Define SSD location if any. Comment the line if no SSD is present
+%% % Checks SSD location for sufficient space
 if isdir(SSD_path)
     FileObj = java.io.File(SSD_path);
     free_bytes = FileObj.getFreeSpace;
@@ -138,10 +131,11 @@ save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
 if ops.export.phy
     disp('Converting to Phy format')
     rezToPhy_KSW(rez);
-end
-% AutoCluster the Phy output
-if performAutoCluster
-    PhyAutoClustering(savepath);
+    
+    % AutoClustering the Phy output
+    if performAutoCluster
+        PhyAutoClustering(savepath);
+    end
 end
 
 %% export Neurosuite files
