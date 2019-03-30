@@ -18,10 +18,10 @@ function Phy2Neurosuite(basepath,clustering_path)
 % petersen.peter@gmail.com
 
 t1 = tic;
-cd(clustering_path)
-
-if exist('rez.mat')
-    load('rez.mat')
+% cd(clustering_path)
+rezpath = fullfile(clustering_path,'rez.mat');
+if exist(rezpath)
+    load(rezpath)
     spikeTimes = uint64(rez.st3(:,1)); % uint64
     if isfield(rez.ops,'basename')
         basename = rez.ops.basename;
@@ -235,12 +235,16 @@ fprintf('\nComplete!')
         
         for i = 1:length(kcoords2)
             kcoords3 = kcoords2(i);
-            waveforms_all{i} = zeros(sum(kcoords==kcoords3),ops.nt0,size(rez.ia{i},1));
-            if exist('xml')
-                [channel_order,channel_index] = sort(xml.SpkGrps(kcoords2(i)).Channels+1);
-                [~,indicesTokeep{i},~] = intersect(chanMapConn,channel_order);
-                
-                %indicesTokeep{i} = connected_index(indicesTokeep{i});
+            if i<=length(rez.ia)%case where no clus in last group... like if last group was non-ephys
+                waveforms_all{i} = zeros(sum(kcoords==kcoords3),ops.nt0,size(rez.ia{i},1));
+                if exist('xml')
+                    [channel_order,channel_index] = sort(xml.AnatGrps(kcoords2(i)).Channels+1);
+                    [~,indicesTokeep{i},~] = intersect(chanMapConn,channel_order);
+
+                    %indicesTokeep{i} = connected_index(indicesTokeep{i});
+                end
+            else
+                kcoords2(i) = [];
             end
         end
         
@@ -272,7 +276,11 @@ fprintf('\nComplete!')
                 buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
             end
             if ops.GPU
-                dataRAW = gpuArray(buff);
+                try%control for if gpu is busy
+                    dataRAW = gpuArray(buff);
+                catch
+                    dataRAW = buff;
+                end
             else
                 dataRAW = buff;
             end
