@@ -1,5 +1,5 @@
 function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
-    templateFeatureInds, pcFeatures, pcFeatureInds] = rezToPhy(rez,savepath)
+    templateFeatureInds, pcFeatures, pcFeatureInds] = rezToPhy_KSW(rez,savepath)
 % pull out results from kilosort's rez to either return to workspace or to
 % save in the appropriate format for the phy GUI to run on. If you provide
 % a savePath it should be a folder, and you will need to have npy-matlab

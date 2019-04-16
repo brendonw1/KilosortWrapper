@@ -63,14 +63,12 @@ end
 mountSSD = mnt(SSD);
 freespaceSSD = freespace(SSD);
 
-
 mountHD = mnt(~SSD);
 freespaceHD = freespace(~SSD);
 
 
 if any( (freespaceSSD-datsize) > .5)
     %save 500MB on the SSD, can be decreased
-    
     [~,b] = max(freespaceSSD-datsize);
     
     fname = [mountSSD{b} '/temp_wh_' num2str(gpuDeviceNum) '.dat'];
