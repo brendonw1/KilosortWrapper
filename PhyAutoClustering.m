@@ -1,55 +1,51 @@
 function PhyAutoClustering(clusteringpath,varargin)
-% AutoClustering automtically cleans Kilosort output in phy format defined
-% by a clusteringpath.
-%
 % INPUT:
 %     clusteringpath: char
 %
-% optional:
+% Optional:
 %     AutoClustering(clusteringpath,elec,dim)
 %     where dim is the number of channels in electro group (if not
 %     defined, will read the first line of the fet file
 %
-% AutoClustering is meant to clean the output of KlustaKwik. The first
-% thing it does is to separate electrical artifacts and MUA from putative
-% isolated units. To do so, it sorts out units which have no clear
-% refractory period (based on Hill, Mehta and Kleinfeld, J Neurosci.,
-% 2012). Threshold can be set in the parameter section of this file
-% ("Rogue spike threshold"). Then, it separates electrical
-% artifats from MUA based on the assumption that electrical artifacts are
-% highly correlated on the different channels: the average waveform of at
-% least one channel has to be different from the across-channel average
-% waveform by a certrain amount of total variance (can be set in the
-% parameter section, "Deviation from average spike threshold")
+% Requirements: 
+%    CCGHeart has to be compiled. Go to the private folder of the wrapper and type:
+%    mex -O CCGHeart.c
 %
 %
-% Once the program has determined which of the clusters are putative
-% isolated units, it tries to merge them based on waveform similarity
-% (mahalanobis distance) and quality of the refractory period in the new
-% merged cluster (or "Inter Common Spike Interval" from MS Fee et al. J
-% Neurosci. Meth., 1996)
+% PhyAutoClustering is cleaning the output of Kilosort and labels the units accordingly:
+% 1. Removing spikes with large artifacts:
+%    Uses the amplitude vector and removes spikes with an amplitude larger
+%    than amplitude_thr, where the spikes are convoluted to get time points
+%    with greater general amplitude than the amplitude_thr. Artifact spikes
+%    are grouped and labeled 'artifacts'.
 %
-% Original script by Adrien Peyrache, 2012.
-% Many modifications for Phy processing pipeline by 
-% Yuta Senzai and Peter Petersen
+% 2. Mahal artifact removal
+%    Uses the private PCAs and removes any spikes with a larger mahal
+%    distance than mahal_thr. Removes spikes are labeled as 'mua'.
+% 3. Determines MUA (labeled 'mua')
+% 
+% 4. Removes noise artifacts (labeled 'noise')
+%    Sorts out units which have no clear refractory period (based on Hill, 
+%    Mehta and Kleinfeld, J Neurosci., 2012). Threshold can be set in the 
+%    parameter section of this file ("Rogue spike threshold"). Then, it 
+%    separates electrical artifats from MUA based on the assumption that 
+%    electrical artifacts are highly correlated on the different channels: 
+%    the average waveform of at least one channel has to be different from 
+%    the across-channel average waveform by a certrain amount of total 
+%    variance (can be set in the  parameter section, "Deviation from average
+%    spike threshold")  (including units with less than 100 spikes):
+%
+% 5. Merging potential units based on CCGs
+%    Once the program has determined which of the clusters are putative
+%    isolated units, it tries to merge them based on waveform similarity 
+%    (mahalanobis distance) and quality of the refractory period in the new 
+%    merged cluster (or "Inter Common Spike Interval" from MS Fee et al. 
+%    JNeurosci. Meth., 1996).
+% 
+% By Adrien Peyrache, Peter Petersen & Yuta Senzai
 
 
-% if ~isempty(varargin)
-%     dim = varargin{1};
-%     dim = dim(:);
-%     if any(double(int16(dim))~=dim)
-%         error('Number of dimensions must be an integer')
-%     end
-%     
-%     if size(dim,1) ~= length(elec) && length(dim) ~=1
-%         error('Number of dimensions must be a vector of the same length as electrode vector or a single value')
-%     end
-%     if length(dim) == 1
-%         dim = dim*ones(length(elec),1);
-%     end
-% else
-%     dim = zeros(length(elec),1);
-% end
+
 
 % Refractory period in msec
 tR = 1.5; % 1.5
@@ -191,7 +187,7 @@ noiseIx = find((meanR >= rThres & maxPwRatio < mprThres)|h<100);
 muaIx = find(fractRogue>rogThres & ~(meanR >= rThres & maxPwRatio < mprThres) & h>=100);
 goodIx = find(fractRogue<=rogThres & ~(meanR >= rThres & maxPwRatio < mprThres) & h>=100); % 100 or samlenum
 
-% Saving clusters to cluster_group.tsv
+% Saving clusters to cluster_group.tsv (Phy)
 fid = fopen(fullfile(clusteringpath,'cluster_group.tsv'),'w');
 fwrite(fid, sprintf('cluster_id\t%s\r\n', 'group'));
 for ii=1:length(cids)

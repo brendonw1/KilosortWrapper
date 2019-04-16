@@ -11,8 +11,8 @@ function spikes = loadClusteringData(baseName,clusteringMethod,clusteringPath,va
 
 p = inputParser;
 addParameter(p,'shanks',nan,@isnumeric); % shanks: Loading only a subset of shanks (only applicable to Klustakwik)
-addParameter(p,'raw_clusters',false,@islogical); % raw_clusters: Load only a subset of clusters (might not work anymore as I have not used it for a long time)
-addParameter(p,'forceReload',false,@islogical); % Reload spikes from original format?
+addParameter(p,'raw_clusters',false,@islogical); % raw_clusters: Load only a subset of clusters (might not work anymore as it has not been tested for a long time)
+addParameter(p,'forceReload',false,@islogical); % Reload spikes from original format and resave the .spikes.mat file?
 addParameter(p,'saveMat',true,@islogical); % Save spikes to mat file?
 addParameter(p,'getWaveforms',true,@islogical); % Get average waveforms? Only in effect for neurosuite/klustakwik format
 parse(p,varargin{:})
@@ -31,6 +31,8 @@ if exist(fullfile(clusteringPath,[baseName,'.spikes.cellinfo.mat'])) & ~forceRel
     else
         disp('Loading existing spikes file')
     end
+else
+    forceReload = true;
 end
 
 if forceReload
