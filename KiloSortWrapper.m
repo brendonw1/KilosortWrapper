@@ -151,7 +151,7 @@ if ops.export.neurosuite
     basename = rez.ops.basename;
     rez.ops.fbinary = fullfile(pwd, [basename,'.dat']);
     Kilosort2Neurosuite(rez)
-    
+
     writeNPY(rez.ops.kcoords, fullfile(clustering_path, 'channel_shanks.npy'));
 
     phy_export_units(clustering_path,basename);
