@@ -23,17 +23,22 @@ switch(xml_electrode_type)
         electrode_type = 'poly3';
     case 'poly5'
         electrode_type = 'poly5';
+    case 'twohundred'
+        electrode_type = 'twohundred';
 end
+
+%%Default
 if ~exist('electrode_type')
     electrode_type = 'staggered';
 end
-xcoords = [];
+
+%%
+xcoords = [];%eventual output arrays
 ycoords = [];
 
-t = par.AnatGrps;
 ngroups = length(par.AnatGrps);
 for g = 1:ngroups
-    tgroups{g} = par.AnatGrps(g).Channels;
+    groups{g} = par.AnatGrps(g).Channels;
 end
 
 switch(electrode_type)
@@ -41,7 +46,7 @@ switch(electrode_type)
         for a= 1:ngroups %being super lazy and making this map with loops
             x = [];
             y = [];
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             for i =1:length(tchannels)
                 x(i) = 20;%length(tchannels)-i;
                 y(i) = -i*20;
@@ -56,7 +61,7 @@ switch(electrode_type)
     case 'poly3'
         disp('poly3 probe layout')
         for a= 1:ngroups %being super lazy and making this map with loops
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             x = nan(1,length(tchannels));
             y = nan(1,length(tchannels));
             extrachannels = mod(length(tchannels),3);
@@ -75,7 +80,7 @@ switch(electrode_type)
     case 'poly5'
         disp('poly5 probe layout')
         for a= 1:ngroups %being super lazy and making this map with loops
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             x = nan(1,length(tchannels));
             y = nan(1,length(tchannels));
             extrachannels = mod(length(tchannels),5);
@@ -101,7 +106,7 @@ switch(electrode_type)
         for a= 1:ngroups %being super lazy and making this map with loops
             x = [];
             y = [];
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             for i =1:length(tchannels)
                 x(i) = length(tchannels)-i;
                 y(i) = -i*30;
@@ -110,36 +115,53 @@ switch(electrode_type)
             xcoords = cat(1,xcoords,x(:));
             ycoords = cat(1,ycoords,y(:));
         end
+    case 'twohundred'
+        for a= 1:ngroups 
+            x = [];
+            y = [];
+            tchannels  = groups{a};
+            for i =1:length(tchannels)
+                x(i) = 0;%length(tchannels)-i;
+                if mod(i,2)
+                    y(i) = 0;%odds
+                else
+                    y(i) = 200;%evens
+                end
+            end
+            x = x+(a-1)*200;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
+        end
 end
 Nchannels = length(xcoords);
 
 kcoords = zeros(1,Nchannels);
 switch(electrode_type)
-    case {'staggered','poly3','poly5'}
+    case {'staggered','poly3','poly5','twohundred'}
         for a= 1:ngroups
-            kcoords(tgroups{a}+1) = a;
+            kcoords(groups{a}+1) = a;
         end
     case 'neurogrid'
         for a= 1:ngroups
-            kcoords(tgroups{a}+1) = floor((a-1)/4)+1;
+            kcoords(groups{a}+1) = floor((a-1)/4)+1;
         end
 end
 connected = true(Nchannels, 1);
 
-% Removing dead channels by the skip parameter in the xml
+% just use AnatGrps
+% % Removing dead channels by the skip parameter in the xml
+% % order = [par.AnatGrps.Channels];
+% % skip = find([par.AnatGrps.Skip]);
+% % connected(order(skip)+1) = false;
 % order = [par.AnatGrps.Channels];
-% skip = find([par.AnatGrps.Skip]);
-% connected(order(skip)+1) = false;
-
-order = [par.AnatGrps.Channels];
-if isfield(par,'SpkGrps')
-    skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
-    connected(order(skip2)+1) = false;
-end
+% if isfield(par,'SpkGrps')
+%     skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
+%     connected(order(skip2)+1) = false;
+% end
 
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
-[~,I] =  sort(horzcat(tgroups{:}));
+[~,I] =  sort(horzcat(groups{:}));
 xcoords = xcoords(I)';
 ycoords  = ycoords(I)';
 
