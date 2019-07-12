@@ -12,6 +12,10 @@ function savepath = KiloSortWrapper(varargin)
 % Check varargin description below when input parameters are parsed
 %
 % Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
+%
+% The AutoClustering requires the CCGHeart to be compile.
+% Go to the private folder of the wrapper and type:
+% mex -O CCGHeart.c
 % 
 % Copyright (C) 2016 Brendon Watson and the Buzsakilab
 %
@@ -32,7 +36,7 @@ addParameter(p,'basename',basename,@ischar)         % file basenames (of the dat
 addParameter(p,'GPU_id',1,@isnumeric)               % Specify the GPU_id
 addParameter(p,'SSD_path','K:\Kilosort',@ischar)    % Path to SSD disk. Make it empty to disable SSD
 addParameter(p,'CreateSubdirectory',1,@isnumeric)   % Puts the Kilosort output into a subfolder
-addParameter(p,'performAutoCluster',0,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy
+addParameter(p,'performAutoCluster',0,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy.
 addParameter(p,'config','',@ischar)                 % Specify a configuration file to use from the ConfigurationFiles folder. e.g. 'Omid'
 
 parse(p,varargin{:})
@@ -147,7 +151,7 @@ if ops.export.neurosuite
     basename = rez.ops.basename;
     rez.ops.fbinary = fullfile(pwd, [basename,'.dat']);
     Kilosort2Neurosuite(rez)
-    
+
     writeNPY(rez.ops.kcoords, fullfile(clustering_path, 'channel_shanks.npy'));
 
     phy_export_units(clustering_path,basename);

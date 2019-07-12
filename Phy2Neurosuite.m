@@ -18,7 +18,7 @@ function Phy2Neurosuite(basepath,clustering_path)
 % petersen.peter@gmail.com
 
 t1 = tic;
-% cd(clustering_path)
+cd(clustering_path)
 rezpath = fullfile(clustering_path,'rez.mat');
 if exist(rezpath)
     load(rezpath)
