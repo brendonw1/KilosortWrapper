@@ -159,6 +159,9 @@ for ii=1:length(cids)
         meanR = [meanR; meanR_cur];
         
         maxPwRatio_cur = max(abs(wav(11,:)))/mean(abs(wav(11,:)));
+        if isempty(maxPwRatio_cur)
+            maxPwRatio = [maxPwRatio; 0];
+        end
         maxPwRatio = [maxPwRatio; maxPwRatio_cur];
         
         [ccgR,t] = CCG(spktime,ones(size(spktime)),'binsize',.0005,'duration',.06);
