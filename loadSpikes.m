@@ -31,7 +31,7 @@ function spikes = loadSpikes(varargin)
 
 % By Peter Petersen
 % petersen.peter@gmail.com
-% Last edited: 31-07-2019
+% Last edited: 13-10-2019
 
 % Version history
 % 3.2 waveforms for phy data extracted from the raw dat
