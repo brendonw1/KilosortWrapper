@@ -94,17 +94,19 @@ end
 
 % Loading spikes
 if forceReload
-    % Loading session info
-    if buzcode
-        xml = bz_getSessionInfo(basepath, 'noPrompts', true);
-        xml.SampleRate = xml.rates.wideband;
-    else
-        xml = LoadXml(fullfile(clusteringPath,[baseName, '.xml']));
-    end
     switch lower(clusteringFormat)
         
         % Loading klustakwik
         case {'klustakwik', 'neurosuite'}
+            % Loading session info
+            if buzcode
+                xml = bz_getSessionInfo(basepath, 'noPrompts', true);
+                xml.SampleRate = xml.rates.wideband;
+            elseif exist(fullfile(clusteringPath,[baseName, '.xml']),'file')
+                xml = LoadXml(fullfile(clusteringPath,[baseName, '.xml']));
+            else
+                error(['xml file does not exist: ', fullfile(clusteringPath,[baseName, '.xml'])])
+            end
             disp('loadSpikes: Loading Klustakwik data')
             unit_nb = 0;
             shanks_new = [];
@@ -166,8 +168,17 @@ if forceReload
             end
             clear cluster_index time_stamps
             
-        % Loading phy    
+            % Loading phy
         case 'phy'
+            % Loading session info
+            if buzcode
+                xml = bz_getSessionInfo(basepath, 'noPrompts', true);
+                xml.SampleRate = xml.rates.wideband;
+            elseif exist(fullfile(clusteringPath,[baseName, '.xml']),'file')
+                xml = LoadXml(fullfile(clusteringPath,[baseName, '.xml']));
+            else
+                error(['xml file does not exist: ', fullfile(clusteringPath,[baseName, '.xml'])])
+            end
             disp('loadSpikes: Loading Phy/Kilosort data')
             
             spike_cluster_index = readNPY(fullfile(clusteringPath, 'spike_clusters.npy'));
@@ -244,22 +255,25 @@ if forceReload
             end
 
         % Loading klustaViewa - Kwik format (Klustasuite 0.3.0.beta4)
-        case 'klustaViewa'
+        case {'klustaViewa','kwik'}
             disp('loadSpikes: Loading KlustaViewa data')
+            if isnan(shanks)
+                error('Please provide the number of shanks for the session')
+            end
             shank_nb = 1;
             for shank = 1:shanks
-                spike_times = double(hdf5read([folder, dataset, '.kwik'], ['/channel_groups/' num2str(shank-1) '/spikes/time_samples']));
-                recording_nb = double(hdf5read([folder, dataset, '.kwik'], ['/channel_groups/' num2str(shank-1) '/spikes/recording']));
-                cluster_index = double(hdf5read([folder, dataset, '.kwik'], ['/channel_groups/' num2str(shank-1) '/spikes/clusters/main']));
-                waveforms = double(hdf5read([folder, dataset, '.kwx'], ['/channel_groups/' num2str(shank-1) '/waveforms_filtered']));
+                spike_times = double(hdf5read(fullfile(clusteringPath, [baseName, '.kwik']), ['/channel_groups/' num2str(shank-1) '/spikes/time_samples']));
+                recording_nb = double(hdf5read(fullfile(clusteringPath, [baseName, '.kwik']), ['/channel_groups/' num2str(shank-1) '/spikes/recording']));
+                cluster_index = double(hdf5read(fullfile(clusteringPath, [baseName, '.kwik']), ['/channel_groups/' num2str(shank-1) '/spikes/clusters/main']));
+                waveforms = double(hdf5read(fullfile(clusteringPath, [baseName, '.kwx']), ['/channel_groups/' num2str(shank-1) '/waveforms_filtered']));
                 clusters = unique(cluster_index);
                 for i = 1:length(clusters(:))
-                    cluster_type = double(hdf5read([folder, dataset, '.kwik'], ['/channel_groups/' num2str(shank-1) '/clusters/main/' num2str(clusters(i)),'/'],'cluster_group'));
+                    cluster_type = double(hdf5read(fullfile(clusteringPath, [baseName, '.kwik']), ['/channel_groups/' num2str(shank-1) '/clusters/main/' num2str(clusters(i)),'/'],'cluster_group'));
                     if cluster_type == 2
                         indexes{shank_nb} = shank_nb*ones(sum(cluster_index == clusters(i)),1);
                         spikes.UID(shank_nb) = shank_nb;
                         spikes.ts{shank_nb} = spike_times(cluster_index == clusters(i))+recording_nb(cluster_index == clusters(i))*40*40000;
-                        spikes.times{shank_nb} = spikes.ts{j}/xml.SampleRate;
+                        spikes.times{shank_nb} = spikes.ts{shank_nb}/40000;
                         spikes.total(shank_nb) = sum(cluster_index == clusters(i));
                         spikes.shankID(shank_nb) = shank-1;
                         spikes.cluID(shank_nb) = clusters(i);
@@ -270,9 +284,9 @@ if forceReload
                 end
             end
             
-            if getWaveforms % get waveforms
-                spikes = GetWaveformsFromDat(spikes,xml,basepath,baseName,LSB,session);
-            end
+%             if getWaveforms % get waveforms
+%                 spikes = GetWaveformsFromDat(spikes,xml,basepath,baseName,LSB,session);
+%             end
     end
     spikes.sessionName = baseName;
     
