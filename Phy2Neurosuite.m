@@ -1,4 +1,4 @@
-function Phy2Neurosuite(basepath,clustering_path)
+function Phy2Neurosuite(basepath,clustering_path,output_format)
 % Converts Phy output (NPY files) to Neurosuite files: fet, res, clu, spk files.
 % Based on the GPU enable filter from Kilosort and fractions from Brendon
 % Watson's code for saving Neurosuite files. 
@@ -208,11 +208,12 @@ fprintf('\nComplete!')
         
         DATA =zeros(NT, NchanTOT,Nbatch_buff,'int16');
         
-        if isfield(ops,'fslow')&&ops.fslow<ops.fs/2
-            [b1, a1] = butter(3, [ops.fshigh/ops.fs,ops.fslow/ops.fs]*2, 'bandpass');
-        else
-            [b1, a1] = butter(3, ops.fshigh/ops.fs*2, 'high');
-        end
+%         if isfield(ops,'fslow')&&ops.fslow<ops.fs/2
+%             [b1, a1] = butter(3, [ops.fshigh/ops.fs,ops.fslow/ops.fs]*2, 'bandpass');
+%         else
+%             [b1, a1] = butter(3, ops.fshigh/ops.fs*2, 'high');
+%         end
+        [b1, a1] = butter(3, ops.fshigh/ops.fs*2, 'high');
         
         if isfield(ops,'xml')
             disp('Loading xml from rez for probe layout')

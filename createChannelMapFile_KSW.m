@@ -109,9 +109,9 @@ switch(electrode_type)
             tchannels  = groups{a};
             for i =1:length(tchannels)
                 x(i) = length(tchannels)-i;
-                y(i) = -i*30;
+                y(i) = -i*50;
             end
-            x = x+a*30;
+            x = x+a*50;
             xcoords = cat(1,xcoords,x(:));
             ycoords = cat(1,ycoords,y(:));
         end

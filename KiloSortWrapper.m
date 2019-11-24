@@ -13,7 +13,7 @@ function savepath = KiloSortWrapper(varargin)
 %
 % Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 %
-% The AutoClustering requires the CCGHeart to be compile.
+% The AutoClustering requires CCGHeart to be compiled.
 % Go to the private folder of the wrapper and type:
 % mex -O CCGHeart.c
 % 
@@ -36,7 +36,7 @@ addParameter(p,'basename',basename,@ischar)         % file basenames (of the dat
 addParameter(p,'GPU_id',1,@isnumeric)               % Specify the GPU_id
 addParameter(p,'SSD_path','K:\Kilosort',@ischar)    % Path to SSD disk. Make it empty to disable SSD
 addParameter(p,'CreateSubdirectory',1,@isnumeric)   % Puts the Kilosort output into a subfolder
-addParameter(p,'performAutoCluster',0,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy.
+addParameter(p,'performAutoCluster',1,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy.
 addParameter(p,'config','',@ischar)                 % Specify a configuration file to use from the ConfigurationFiles folder. e.g. 'Omid'
 
 parse(p,varargin{:})
