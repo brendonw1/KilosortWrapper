@@ -1,4 +1,4 @@
-function createChannelMapFile_Local(basepath,electrode_type)
+function createChannelMapFile_Local(basepath,basename,electrode_type)
 % Original function by Brendon and Sam
 % electrode_type: Two options at this point: 'staggered' or 'neurogrid'
 % create a channel map file
@@ -6,8 +6,11 @@ function createChannelMapFile_Local(basepath,electrode_type)
 if ~exist('basepath','var')
     basepath = cd;
 end
-d   = dir('*.xml');
-[par,rxml] = LoadXml(fullfile(basepath,d(1).name));
+if ~exist('basename','var')
+    [~,basename] = fileparts(basepath);
+end
+
+[par,rxml] = LoadXml(fullfile(basepath,[basename,'.xml']));
 xml_electrode_type = rxml.child(1).child(4).value;
 switch(xml_electrode_type)
     case 'staggered'
@@ -20,17 +23,22 @@ switch(xml_electrode_type)
         electrode_type = 'poly3';
     case 'poly5'
         electrode_type = 'poly5';
+    case 'twohundred'
+        electrode_type = 'twohundred';
 end
+
+%%Default
 if ~exist('electrode_type')
     electrode_type = 'staggered';
 end
-xcoords = [];
+
+%%
+xcoords = [];%eventual output arrays
 ycoords = [];
 
-t = par.AnatGrps;
 ngroups = length(par.AnatGrps);
 for g = 1:ngroups
-    tgroups{g} = par.AnatGrps(g).Channels;
+    groups{g} = par.AnatGrps(g).Channels;
 end
 
 switch(electrode_type)
@@ -38,7 +46,7 @@ switch(electrode_type)
         for a= 1:ngroups %being super lazy and making this map with loops
             x = [];
             y = [];
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             for i =1:length(tchannels)
                 x(i) = 20;%length(tchannels)-i;
                 y(i) = -i*20;
@@ -53,7 +61,7 @@ switch(electrode_type)
     case 'poly3'
         disp('poly3 probe layout')
         for a= 1:ngroups %being super lazy and making this map with loops
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             x = nan(1,length(tchannels));
             y = nan(1,length(tchannels));
             extrachannels = mod(length(tchannels),3);
@@ -72,7 +80,7 @@ switch(electrode_type)
     case 'poly5'
         disp('poly5 probe layout')
         for a= 1:ngroups %being super lazy and making this map with loops
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             x = nan(1,length(tchannels));
             y = nan(1,length(tchannels));
             extrachannels = mod(length(tchannels),5);
@@ -85,9 +93,9 @@ switch(electrode_type)
             x(1:extrachannels) = 18*(-1).^[1:extrachannels];
             
             y(find(x == 2*18)) =  [1:length(find(x == 2*18))]*-28;
-            y(find(x == 18)) =    [1:length(find(x == 18))]*-28+14;
+            y(find(x == 18)) =    [1:length(find(x == 18))]*-28-14;
             y(find(x == 0)) =     [1:length(find(x == 0))]*-28;
-            y(find(x == -18)) =   [1:length(find(x == -18))]*-28+14;
+            y(find(x == -18)) =   [1:length(find(x == -18))]*-28-14;
             y(find(x == 2*-18)) = [1:length(find(x == 2*-18))]*-28;
             
             x = x+a*200;
@@ -98,12 +106,29 @@ switch(electrode_type)
         for a= 1:ngroups %being super lazy and making this map with loops
             x = [];
             y = [];
-            tchannels  = tgroups{a};
+            tchannels  = groups{a};
             for i =1:length(tchannels)
                 x(i) = length(tchannels)-i;
-                y(i) = -i*30;
+                y(i) = -i*50;
             end
-            x = x+a*30;
+            x = x+a*50;
+            xcoords = cat(1,xcoords,x(:));
+            ycoords = cat(1,ycoords,y(:));
+        end
+    case 'twohundred'
+        for a= 1:ngroups 
+            x = [];
+            y = [];
+            tchannels  = groups{a};
+            for i =1:length(tchannels)
+                x(i) = 0;%length(tchannels)-i;
+                if mod(i,2)
+                    y(i) = 0;%odds
+                else
+                    y(i) = 200;%evens
+                end
+            end
+            x = x+(a-1)*200;
             xcoords = cat(1,xcoords,x(:));
             ycoords = cat(1,ycoords,y(:));
         end
@@ -112,25 +137,31 @@ Nchannels = length(xcoords);
 
 kcoords = zeros(1,Nchannels);
 switch(electrode_type)
-    case {'staggered','poly3','poly5'}
+    case {'staggered','poly3','poly5','twohundred'}
         for a= 1:ngroups
-            kcoords(tgroups{a}+1) = a;
+            kcoords(groups{a}+1) = a;
         end
     case 'neurogrid'
         for a= 1:ngroups
-            kcoords(tgroups{a}+1) = floor((a-1)/4)+1;
+            kcoords(groups{a}+1) = floor((a-1)/4)+1;
         end
 end
 connected = true(Nchannels, 1);
 
-% Removing dead channels by the skip parameter in the xml
-order = [par.AnatGrps.Channels];
-skip = find([par.AnatGrps.Skip]);
-connected(order(skip)+1) = false;
+% just use AnatGrps
+% % Removing dead channels by the skip parameter in the xml
+% % order = [par.AnatGrps.Channels];
+% % skip = find([par.AnatGrps.Skip]);
+% % connected(order(skip)+1) = false;
+% order = [par.AnatGrps.Channels];
+% if isfield(par,'SpkGrps')
+%     skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
+%     connected(order(skip2)+1) = false;
+% end
 
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
-[~,I] =  sort(horzcat(tgroups{:}));
+[~,I] =  sort(horzcat(groups{:}));
 xcoords = xcoords(I)';
 ycoords  = ycoords(I)';
 

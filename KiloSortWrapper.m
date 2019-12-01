@@ -1,59 +1,102 @@
-function savepath = KiloSortWrapper(basepath,basename)
+function savepath = KiloSortWrapper(varargin)
 % Creates channel map from Neuroscope xml files, runs KiloSort and
-% writes output data in the Neuroscope/Klusters format. 
-% StandardConfig.m should be in the path or copied to the local folder
+% writes output data to Neurosuite format or Phy.
 % 
-%  USAGE
+% USAGE
 %
-%    KiloSortWrapper()
-%    Should be run from the data folder, and file basenames are the
-%    same as the name as current directory
+% KiloSortWrapper
+% Run from data folder. File basenames must be the
+% same as the name as current folder
 %
-%    KiloSortWrapper(basepath,basenmae)
+% KiloSortWrapper(varargin)
+% Check varargin description below when input parameters are parsed
 %
-%    INPUTS
-%    basepath       path to the folder containing the data
-%    basename       file basenames (of the dat and xml files)
+% Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
 %
-%    Dependencies:  KiloSort (https://github.com/cortex-lab/KiloSort)
-
+% The AutoClustering requires CCGHeart to be compiled.
+% Go to the private folder of the wrapper and type:
+% mex -O CCGHeart.c
+% 
 % Copyright (C) 2016 Brendon Watson and the Buzsakilab
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation; either version 2 of the License, or
 % (at your option) any later version.
+
 disp('Running Kilosort spike sorting with the Buzsaki lab wrapper')
 
-%% Addpath if needed
-% addpath(genpath('gitrepositories/KiloSort')) % path to kilosort folder
-% addpath(genpath('gitrepositories/npy-matlab')) % path to npy-matlab scripts
+%% Parsing inputs
+p = inputParser;
+basepath = cd;
+[~,basename] = fileparts(basepath);
 
-%% If function is called without argument
-if nargin == 0
-   [~,basename] = fileparts(cd);
-   basepath = cd;
-elseif nargin == 1
-    [~,basename] = fileparts(basepath);
-    basepath = cd;
-end
+addParameter(p,'basepath',basepath,@ischar)         % path to the folder containing the data
+addParameter(p,'basename',basename,@ischar)         % file basenames (of the dat and xml files)
+addParameter(p,'GPU_id',1,@isnumeric)               % Specify the GPU_id
+addParameter(p,'SSD_path','K:\Kilosort',@ischar)    % Path to SSD disk. Make it empty to disable SSD
+addParameter(p,'CreateSubdirectory',1,@isnumeric)   % Puts the Kilosort output into a subfolder
+addParameter(p,'performAutoCluster',1,@isnumeric)   % Performs PhyAutoCluster once Kilosort is complete when exporting to Phy.
+addParameter(p,'config','',@ischar)                 % Specify a configuration file to use from the ConfigurationFiles folder. e.g. 'Omid'
+
+parse(p,varargin{:})
+
+basepath = p.Results.basepath;
+basename = p.Results.basename;
+GPU_id = p.Results.GPU_id;
+SSD_path = p.Results.SSD_path;
+CreateSubdirectory = p.Results.CreateSubdirectory;
+performAutoCluster = p.Results.performAutoCluster;
+config = p.Results.config;
+
 cd(basepath)
+
+%% Checking if dat and xml files exist
+if ~exist(fullfile(basepath,[basename,'.xml']))
+    warning('KilosortWrapper  %s.xml file not in path %s',basename,basepath);
+    return
+elseif ~exist(fullfile(basepath,[basename,'.dat']))
+    warning('KilosortWrapper  %s.dat file not in path %s',basename,basepath)
+    return
+end
 
 %% Creates a channel map file
 disp('Creating ChannelMapFile')
-createChannelMapFile_KSW(basepath,'staggered');
+createChannelMapFile_KSW(basepath,basename,'staggered');
 
-%% default options are in parenthesis after the comment
+%% Loading configurations
 XMLFilePath = fullfile(basepath, [basename '.xml']);
-% if exist(fullfile(basepath,'StandardConfig.m'),'file') %this should actually be unnecessary
-%     addpath(basepath);
-% end
-ops = StandardConfig_KSW(XMLFilePath);
+
+if isempty(config)
+    disp('Running Kilosort with standard settings')
+    ops = KilosortConfiguration(XMLFilePath);
+else
+    disp('Running Kilosort with user specific settings')
+    config_string = str2func(['KiloSortConfiguration_' config_version]);
+    ops = config_string(XMLFilePath);
+    clear config_string;
+end
+
+%% % Checks SSD location for sufficient space
+if isdir(SSD_path)
+    FileObj = java.io.File(SSD_path);
+    free_bytes = FileObj.getFreeSpace;
+    dat_file = dir(fullfile(basepath,[basename,'.dat']));
+    if dat_file.bytes*1.1<FileObj.getFreeSpace
+        disp('Creating a temporary dat file on the SSD drive')
+        ops.fproc = fullfile(SSD_path, [basename,'_temp_wh.dat']);
+    else
+        warning('Not sufficient space on SSD drive. Creating local dat file instead')
+        ops.fproc = fullfile(basepath,'temp_wh.dat');
+    end
+else
+    ops.fproc = fullfile(basepath,'temp_wh.dat');
+end
 
 %%
 if ops.GPU
     disp('Initializing GPU')
-    gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
+    gpudev = gpuDevice(GPU_id); % initialize GPU (will erase any existing GPU arrays)
 end
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
@@ -72,7 +115,7 @@ rez = fullMPMU(rez, DATA); % extract final spike times (overlapping extraction)
 
 %% posthoc merge templates (under construction)
 % save matlab results file
-CreateSubdirectory = 1;
+
 if CreateSubdirectory
     timestamp = ['Kilosort_' datestr(clock,'yyyy-mm-dd_HHMMSS')];
     savepath = fullfile(basepath, timestamp);
@@ -88,15 +131,35 @@ disp('Saving rez file')
 % rez = merge_posthoc2(rez);
 save(fullfile(savepath,  'rez.mat'), 'rez', '-v7.3');
 
-%% save python results file for Phy
-disp('Converting to Phy format')
-rezToPhy_KSW(rez);
+%% export python results file for Phy
+if ops.export.phy
+    disp('Converting to Phy format')
+    rezToPhy_KSW(rez);
+    
+    % AutoClustering the Phy output
+    if performAutoCluster
+        PhyAutoClustering(savepath);
+    end
+end
 
-%% save python results file for Klusters
-% disp('Converting to Klusters format')
-% ConvertKilosort2Neurosuite_KSW(rez);
+%% export Neurosuite files
+if ops.export.neurosuite
+    disp('Converting to Klusters format')
+    load('rez.mat')
+    rez.ops.root = pwd;
+    clustering_path = pwd;
+    basename = rez.ops.basename;
+    rez.ops.fbinary = fullfile(pwd, [basename,'.dat']);
+    Kilosort2Neurosuite(rez)
 
-%% Remove temporary file
+    writeNPY(rez.ops.kcoords, fullfile(clustering_path, 'channel_shanks.npy'));
+
+    phy_export_units(clustering_path,basename);
+end
+
+%% Remove temporary file and resetting GPU
 delete(ops.fproc);
+reset(gpudev)
+gpuDevice([])
 disp('Kilosort Processing complete')
 

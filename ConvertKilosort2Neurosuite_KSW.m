@@ -22,7 +22,7 @@ if ~exist('basepath','var')
     [~,basename] = fileparts(cd);
     basepath = cd;
 end
-if ~exist('rez','var');
+if ~exist('rez','var')
     load(fullfile(basepath,'rez.mat'))
 end
 
