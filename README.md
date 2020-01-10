@@ -26,3 +26,6 @@ The Kilosort wrapper allows you to save the output in Neurosuite and Phy compati
 
 ### Neurosuite (Kilosort2Neurosuite)
 Creates all classical files used in the Neurosuite format. For this the dat file is filtered, waveforms are extracted and global PCA features are calculated. 
+
+### Please use below DOI for citing the KiloSortWrapper
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3604165.svg)](https://doi.org/10.5281/zenodo.3604165)
