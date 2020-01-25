@@ -28,6 +28,9 @@ function spikes = loadSpikes(varargin)
 % DEPENDENCIES: 
 %
 % LoadXml.m & xmltools.m (default) or bz_getSessionInfo.m
+% 
+% EXAMPLE CALL
+% spikes = loadSpikes('clusteringpath',KilosortOutputPath,'basepath',pwd); % Run from basepath, assumes Phy format. Requires xml file and dat file in basepath
 
 % By Peter Petersen
 % petersen.peter@gmail.com
@@ -77,7 +80,7 @@ if ~isempty(session)
     basename = session.general.name;
     basepath = session.general.basePath;
     clusteringFormat = session.spikeSorting{1}.format;
-    clusteringpath = session.general.clusteringPath;
+    clusteringpath = session.spikeSorting{1}.relativePath;
     if isfield(session.extracellular,'leastSignificantBit') && session.extracellular.leastSignificantBit>0
         LSB = session.extracellular.leastSignificantBit;
     end
@@ -114,12 +117,11 @@ if forceReload
     else
         if ~exist('LoadXml.m','file') || ~exist('xmltools.m','file')
             error('''LoadXml.m'' and ''xmltools.m'' is not in your path and is required to load the xml file. If you have buzcode installed, please set ''buzcode'' to true in the input parameters.')
-        else
+        elseif exist(fullfile(clusteringpath_full,[basename, '.xml']),'file')
             xml = LoadXml(fullfile(clusteringpath_full,[basename, '.xml']));
         end
     end
     switch lower(clusteringFormat)
-        
         % Loading klustakwik
         case {'klustakwik', 'neurosuite'}
             disp('loadSpikes: Loading Klustakwik data')
@@ -209,7 +211,7 @@ if forceReload
             elseif exist(filename2) == 2
                 filename = filename2;
             else
-                disp('Phy: No cluster group file found')
+                error('Phy: No cluster group file found')
             end
             delimiter = '\t';
             startRow = 2;
@@ -260,7 +262,7 @@ if forceReload
             end
 
         % Loading klustaViewa - Kwik format (Klustasuite 0.3.0.beta4)
-        case 'klustaViewa'
+        case 'klustaviewa'
             disp('loadSpikes: Loading KlustaViewa data')
             shank_nb = 1;
             for shank = 1:shanks
@@ -277,7 +279,7 @@ if forceReload
                         spikes.ts{shank_nb} = spike_times(cluster_index == clusters(i))+recording_nb(cluster_index == clusters(i))*40*40000;
                         spikes.times{shank_nb} = spikes.ts{j}/xml.SampleRate;
                         spikes.total(shank_nb) = sum(cluster_index == clusters(i));
-                        spikes.shankID(shank_nb) = shank-1;
+                        spikes.shankID(shank_nb) = shank;
                         spikes.cluID(shank_nb) = clusters(i);
                         spikes.filtWaveform_all{shank_nb} = mean(waveforms(:,:,cluster_index == clusters(i)),3);
                         spikes.filtWaveform_all_std{shank_nb} = permute(std(permute(waveforms(:,:,cluster_index == clusters(i)),[3,1,2])),[2,3,1]);
@@ -285,15 +287,32 @@ if forceReload
                     end
                 end
             end
+            if getWaveforms % get waveforms
+                spikes = GetWaveformsFromDat(spikes,xml,basepath,basename,LSB,session);
+            end
             
+        % Loading sebastienroyer's data format
+        case {'sebastienroyer'}
+            temp = load(fullfile(clusteringpath_full,[basename,'.mat']));
+            cluster_index = temp.spk.g;
+            cluster_timestamps = temp.spk.t;
+            clusters = unique(cluster_index);
+            for i = 1:length(clusters)
+                spikes.ts{i} = cluster_timestamps(find(cluster_index == clusters(i)));
+                spikes.times{i} = spikes.ts{i}/xml.SampleRate;
+                spikes.total(i) = length(spikes.times{i});
+                spikes.cluID(i) = clusters(i);
+                spikes.UID(i) = i;
+                spikes.filtWaveform_all{i}  = temp.spkinfo.waveform(:,:,i);
+            end
             if getWaveforms % get waveforms
                 spikes = GetWaveformsFromDat(spikes,xml,basepath,basename,LSB,session);
             end
     end
+    % 
     spikes.sessionName = basename;
-    
-    % Generate spindices matrics
     spikes.numcells = length(spikes.UID);
+    % Generate spindices matrics
     for cc = 1:spikes.numcells
         groups{cc}=spikes.UID(cc).*ones(size(spikes.times{cc}));
     end
@@ -346,10 +365,10 @@ showWaveforms = true;
 badChannels = [];
 
 % Removing channels marked as Bad in session struct
-if ~isempty(session)
+if ~isempty(session) && isfield(session.channelTags,'Bad')
     badChannels = session.channelTags.Bad.channels;
     if ~isempty(session.channelTags.Bad.spikeGroups)
-        badChannels = [badChannels,session.extracellular.spikeGroups(session.channelTags.Bad.spikeGroups)+1];
+        badChannels = [badChannels,session.extracellular.electrodeGroups(session.channelTags.Bad.spikeGroups)];
     end
     badChannels = unique(badChannels);
 end
@@ -389,8 +408,12 @@ for ii = 1 : size(spikes.times,2)
         clear m
         error('Waveform extraction canceled by user')
     end
-    t1 = toc(timerVal);
-    spkTmp = spikes.ts{ii}(find(spikes.times{ii} > wfWin_sec/1.8 & spikes.times{ii} < duration-wfWin_sec/1.8));
+    t1 = toc(timerVal); ;
+    if isfield(spikes,'ts')
+        spkTmp = spikes.ts{ii}(find(spikes.times{ii} > wfWin_sec/1.8 & spikes.times{ii} < duration-wfWin_sec/1.8));
+    else
+        spkTmp = round(xml.SampleRate * spikes.times{ii}(find(spikes.times{ii} > wfWin_sec/1.8 & spikes.times{ii} < duration-wfWin_sec/1.8)));
+    end
     
     if length(spkTmp) > nPull
         spkTmp = spkTmp(randperm(length(spkTmp)));
@@ -436,12 +459,13 @@ for ii = 1 : size(spikes.times,2)
     filtWaveform = mean(wfF,2)';
     filtWaveform_std = std(wfF');
     
-    window_interval = wfWin-(wfWinKeep*xml.SampleRate):wfWin-1+(wfWinKeep*xml.SampleRate);
+    window_interval = wfWin-ceil(wfWinKeep*xml.SampleRate):wfWin-1+ceil(wfWinKeep*xml.SampleRate);
     spikes.rawWaveform{ii} = rawWaveform(window_interval); % keep only +- 0.8 ms of waveform
     spikes.rawWaveform_std{ii} = rawWaveform_std(window_interval);
     spikes.filtWaveform{ii} = filtWaveform(window_interval);
     spikes.filtWaveform_std{ii} = filtWaveform_std(window_interval);
-    spikes.timeWaveform{ii} = (-wfWinKeep+1/xml.SampleRate:1/xml.SampleRate:wfWinKeep)*1000;
+    spikes.timeWaveform{ii} = ([-ceil(wfWinKeep*xml.SampleRate)*(1/xml.SampleRate):1/xml.SampleRate:(ceil(wfWinKeep*xml.SampleRate)-1)*(1/xml.SampleRate)])*1000;
+%     spikes.timeWaveform{ii} = (-wfWinKeep+1/xml.SampleRate:1/xml.SampleRate:wfWinKeep)*1000;
     spikes.peakVoltage(ii) = max(spikes.filtWaveform{ii})-min(spikes.filtWaveform{ii});
     
     if ishandle(fig1)

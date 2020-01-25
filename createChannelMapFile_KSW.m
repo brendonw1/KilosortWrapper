@@ -153,11 +153,11 @@ connected = true(Nchannels, 1);
 % % order = [par.AnatGrps.Channels];
 % % skip = find([par.AnatGrps.Skip]);
 % % connected(order(skip)+1) = false;
-% order = [par.AnatGrps.Channels];
-% if isfield(par,'SpkGrps')
-%     skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
-%     connected(order(skip2)+1) = false;
-% end
+order = [par.AnatGrps.Channels];
+if isfield(par,'SpkGrps')
+    skip2 = find(~ismember([par.AnatGrps.Channels], [par.SpkGrps.Channels])); % finds the indices of the channels that are not part of SpkGrps
+    connected(order(skip2)+1) = false;
+end
 
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
